@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 func Execute(text string, iop *ioProvider) error {
@@ -61,6 +63,30 @@ func (c *Command) Execute() error {
 	case "echo":
 		if c.Stdout != nil {
 			_, err = (*c.Stdout).Write([]byte(c.Arguments[0] + "\n"))
+		}
+	case "export":
+		if len(c.Arguments) > 0 {
+			for _, arg := range c.Arguments {
+				parts := strings.SplitN(arg, "=", 2)
+				if len(parts) == 2 {
+					os.Setenv(parts[0], parts[1])
+				}
+			}
+		}
+	case "unset":
+		if len(c.Arguments) > 0 {
+			for _, arg := range c.Arguments {
+				os.Unsetenv(arg)
+			}
+		}
+	case "whoami":
+		if c.Stdout != nil {
+			var u *user.User
+			u, err = user.Current()
+			if err != nil {
+				break
+			}
+			_, err = (*c.Stdout).Write([]byte(u.Username + "\n"))
 		}
 	case "pwd":
 		var pwd string

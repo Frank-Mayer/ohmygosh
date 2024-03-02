@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	if err := ohmygosh.Execute("echo $PWD"); err != nil {
+	if err := ohmygosh.Execute("echo \"hello $(whoami)\""); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
