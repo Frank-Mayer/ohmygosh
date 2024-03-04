@@ -18,195 +18,195 @@ func TestLexicalAnalysis(t *testing.T) {
 		{
 			"echo $TEST",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "test_value", Index: 5},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "test_value", Index: 5},
 			},
 		},
 		{
 			"echo $TEST;echo \"Hello World\"",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "test_value", Index: 5},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "test_value", Index: 5},
 				{Kind: compiler.LexicalStop, Index: 10},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 11},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "Hello World", Index: 18}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "Hello World", Index: 16},
 			},
 		},
 		{
 			"command1 | command2",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalPipeStdout, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command2", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 11},
 			},
 		},
 		{
 			"command1 & command2",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalBackground, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command2", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 11},
 			},
 		},
 		{
 			"command1 > file",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalFileStdout, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "file", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "file", Index: 11},
 			},
 		},
 		{
 			"command1 >> file",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalFileAppendStdout, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "file", Index: 12},
+				{Kind: compiler.LexicalIdentifier, Content: "file", Index: 12},
 			},
 		},
 		{
 			"command1 2> file",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalFileStderr, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "file", Index: 12},
+				{Kind: compiler.LexicalIdentifier, Content: "file", Index: 12},
 			},
 		},
 		{
 			"command1 2>> file",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalFileAppendStderr, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "file", Index: 13},
+				{Kind: compiler.LexicalIdentifier, Content: "file", Index: 13},
 			},
 		},
 		{
 			"command1 &> file",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalFileStdoutAndStderr, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "file", Index: 12},
+				{Kind: compiler.LexicalIdentifier, Content: "file", Index: 12},
 			},
 		},
 		{
 			"command1 < file",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalRedirectStdin, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "file", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "file", Index: 11},
 			},
 		},
 		{
 			"command1 | command2 2>&1 | command3",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
 				{Kind: compiler.LexicalPipeStdout, Index: 9},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command2", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 11},
 				{Kind: compiler.LexicalStderrToStdout, Index: 20},
 				{Kind: compiler.LexicalPipeStdout, Index: 25},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command3", Index: 27},
+				{Kind: compiler.LexicalIdentifier, Content: "command3", Index: 27},
 			},
 		},
 		{
 			"cat<<x\nfoo\nbar\nx",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "cat", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
 				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar", Index: 3},
 			},
 		},
 		{
 			"cat<<x\r\nfoo\r\nbar\r\nx\r\n",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "cat", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
 				{Kind: compiler.LexicalHereDocument, Content: "foo\r\nbar", Index: 3},
 			},
 		},
 		{
 			"cat << x\nfoo\nbar\nx\nrm -rf /",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "cat", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
 				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar", Index: 4},
 				{Kind: compiler.LexicalStop, Index: 18},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "rm", Index: 19},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "-rf", Index: 22},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "/", Index: 26},
+				{Kind: compiler.LexicalIdentifier, Content: "rm", Index: 19},
+				{Kind: compiler.LexicalIdentifier, Content: "-rf", Index: 22},
+				{Kind: compiler.LexicalIdentifier, Content: "/", Index: 26},
 			},
 		},
 		{
 			"cat << x\nfoo\nbar\nx\nrm -rf /",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "cat", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
 				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar", Index: 4},
 				{Kind: compiler.LexicalStop, Index: 18},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "rm", Index: 19},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "-rf", Index: 22},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "/", Index: 26},
+				{Kind: compiler.LexicalIdentifier, Content: "rm", Index: 19},
+				{Kind: compiler.LexicalIdentifier, Content: "-rf", Index: 22},
+				{Kind: compiler.LexicalIdentifier, Content: "/", Index: 26},
 			},
 		},
 		{
 			"echo \"Hello World\"",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "Hello World", Index: 7}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "Hello World", Index: 5},
 			},
 		},
 		{
 			"echo 'Hello World'",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "Hello World", Index: 7}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "Hello World", Index: 5},
 			},
 		},
 		{
 			"echo \"Hello World\";echo 'Hello World'",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "Hello World", Index: 7}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "Hello World", Index: 5},
 				{Kind: compiler.LexicalStop, Index: 18},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 19},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "Hello World", Index: 26}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 19},
+				{Kind: compiler.LexicalIdentifier, Content: "Hello World", Index: 24},
 			},
 		},
 		{
 			"echo a\\tb",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "atb", Index: 6}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "atb", Index: 5},
 			},
 		},
 		{
 			"echo \"a\\tb\"",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "a\tb", Index: 8}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "a\tb", Index: 5},
 			},
 		},
 		{
 			"echo \"\\g\\t\\g\"",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "\\g\t\\g", Index: 8}, // because of the quotes; not correct but good enough for now
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "\\g\t\\g", Index: 5},
 			},
 		},
 		{
 			"echo $(echo 1)",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "1", Index: 13}, // this index is wrong because of the $(...) substitution
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "1", Index: 5},
 			},
 		},
 		{
 			"echo \">$(echo 1)<\"",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: ">1<", Index: 15}, // this index is wrong because of the $(...) substitution
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: ">1<", Index: 5},
 			},
 		},
 		{
 			"echo \">$(echo $TEST)<\"",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: ">test_value<", Index: 10}, // this index is wrong because of the $(...) substitution
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: ">test_value<", Index: 5},
 			},
 		},
 	}

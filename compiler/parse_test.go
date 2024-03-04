@@ -21,8 +21,8 @@ func TestParse(t *testing.T) {
 		{
 			"echo Hello World",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "Hello World", Index: 5},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "Hello World", Index: 5},
 				{Kind: compiler.LexicalStop, Index: 16},
 			},
 			[]compiler.Command{
@@ -38,11 +38,11 @@ func TestParse(t *testing.T) {
 		{
 			"command1 arg1 arg2 || command2",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg1", Index: 8},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg2", Index: 13},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "arg1", Index: 8},
+				{Kind: compiler.LexicalIdentifier, Content: "arg2", Index: 13},
 				{Kind: compiler.LexicalOr, Index: 18},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command2", Index: 21},
+				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 21},
 			},
 			[]compiler.Command{
 				{
@@ -62,11 +62,11 @@ func TestParse(t *testing.T) {
 		{
 			"command1 arg1 arg2 && command2",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg1", Index: 8},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg2", Index: 13},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "arg1", Index: 8},
+				{Kind: compiler.LexicalIdentifier, Content: "arg2", Index: 13},
 				{Kind: compiler.LexicalAnd, Index: 18},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command2", Index: 21},
+				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 21},
 			},
 			[]compiler.Command{
 				{
@@ -86,12 +86,12 @@ func TestParse(t *testing.T) {
 		{
 			"command1 arg1 arg2 2>&1 | command2",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg1", Index: 8},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg2", Index: 13},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "arg1", Index: 8},
+				{Kind: compiler.LexicalIdentifier, Content: "arg2", Index: 13},
 				{Kind: compiler.LexicalStderrToStdout, Index: 18},
 				{Kind: compiler.LexicalPipeStdout, Index: 23},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command2", Index: 25},
+				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 25},
 			},
 			[]compiler.Command{
 				{
@@ -119,11 +119,11 @@ func TestParse(t *testing.T) {
 		{
 			"command1 arg1 arg2 | command2",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command1", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg1", Index: 8},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "arg2", Index: 13},
+				{Kind: compiler.LexicalIdentifier, Content: "command1", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "arg1", Index: 8},
+				{Kind: compiler.LexicalIdentifier, Content: "arg2", Index: 13},
 				{Kind: compiler.LexicalPipeStdout, Index: 18},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "command2", Index: 21},
+				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 21},
 			},
 			[]compiler.Command{
 				{
@@ -148,13 +148,13 @@ func TestParse(t *testing.T) {
 		{
 			"meep||echo ok&&echo meep",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "meep", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "meep", Index: 0},
 				{Kind: compiler.LexicalOr, Index: 4},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 6},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "ok", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 6},
+				{Kind: compiler.LexicalIdentifier, Content: "ok", Index: 11},
 				{Kind: compiler.LexicalAnd, Index: 14},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 16},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "meep", Index: 21},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 16},
+				{Kind: compiler.LexicalIdentifier, Content: "meep", Index: 21},
 			},
 			[]compiler.Command{
 				{
@@ -179,14 +179,14 @@ func TestParse(t *testing.T) {
 		{
 			"echo 1 && echo 2 || echo 3",
 			[]compiler.LexicalToken{
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 0},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "1", Index: 5},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "1", Index: 5},
 				{Kind: compiler.LexicalAnd, Index: 7},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 10},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "2", Index: 15},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 10},
+				{Kind: compiler.LexicalIdentifier, Content: "2", Index: 15},
 				{Kind: compiler.LexicalOr, Index: 17},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "echo", Index: 20},
-				{Kind: compiler.LexicalTokenIdentifier, Content: "3", Index: 25},
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 20},
+				{Kind: compiler.LexicalIdentifier, Content: "3", Index: 25},
 			},
 			[]compiler.Command{
 				{

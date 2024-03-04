@@ -7,15 +7,13 @@ import (
 	"strings"
 )
 
-type LexicalTokenKind uint8
-
 func (k LexicalTokenKind) String() string {
 	return fmt.Sprintf("LexicalTokenKind(%d)", k)
 }
 
 const (
 	// program name, command, argument, variable
-	LexicalTokenIdentifier LexicalTokenKind = iota
+	LexicalIdentifier LexicalTokenKind = iota
 	// ;
 	LexicalStop
 	// &
@@ -48,17 +46,86 @@ const (
 	LexicalOr
 )
 
-type LexicalToken struct {
-	Content string
-	// Index is the position of the token in the text.
-	// This is not 100% accurate because it doesn't take quotation into account.
-	// It's good enough for error messages.
-	// Index is always the position of the first character of the token or within the token (in case of quotation).
-	Index int
-	Kind  LexicalTokenKind
+type (
+	LexicalToken struct {
+		Content string
+		// Index is the position of the token in the text.
+		// This is not 100% accurate because it doesn't take quotation into account.
+		// It's good enough for error messages.
+		// Index is always the position of the first character of the token or within the token (in case of quotation).
+		Index int
+		Kind  LexicalTokenKind
+	}
+
+	LexicalTokenBuilder struct {
+		Content strings.Builder
+		Index   int
+		Kind    LexicalTokenKind
+	}
+
+	lexicalQuotation uint8
+	LexicalTokenKind uint8
+)
+
+func newLexicalTokenBuilder() LexicalTokenBuilder {
+	b := LexicalTokenBuilder{}
+	b.Reset()
+	return b
 }
 
-type lexicalQuotation uint8
+func (b *LexicalTokenBuilder) SetIndex(i int) {
+	b.Index = i
+}
+
+func (b *LexicalTokenBuilder) SetIndexIfEmpty(i int) {
+	if b.Index == -1 {
+		b.Index = i
+	}
+}
+
+func (b *LexicalTokenBuilder) WriteChar(c byte, i int) {
+	b.Content.WriteByte(c)
+	if b.Index == -1 {
+		b.Index = i
+	}
+}
+
+func (b *LexicalTokenBuilder) WriteString(s string, i int) {
+	b.Content.WriteString(s)
+	if b.Index == -1 {
+		b.Index = i
+	}
+}
+func (b *LexicalTokenBuilder) WriteRune(r rune, i int) {
+	b.Content.WriteRune(r)
+	if b.Index == -1 {
+		b.Index = i
+	}
+}
+
+func (b *LexicalTokenBuilder) Build() LexicalToken {
+	t := LexicalToken{
+		Content: b.Content.String(),
+		Index:   b.Index,
+		Kind:    b.Kind,
+	}
+	b.Reset()
+	return t
+}
+
+func (t *LexicalTokenBuilder) Reset() {
+	t.Content.Reset()
+	t.Kind = LexicalIdentifier
+	t.Index = -1
+}
+
+func (t *LexicalTokenBuilder) SetKind(kind LexicalTokenKind) {
+	t.Kind = kind
+}
+
+func (t *LexicalTokenBuilder) IsPresent() bool {
+	return t.Index != -1
+}
 
 const (
 	lexicalQuotationNone lexicalQuotation = iota
@@ -71,8 +138,8 @@ const (
 func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 	texLen := len(text)
 	tokens := make([]LexicalToken, 0)
-	name := strings.Builder{}
 	quotation := lexicalQuotationNone
+	tb := newLexicalTokenBuilder()
 
 	for i := 0; i < texLen; i++ {
 		c := text[i]
@@ -82,28 +149,30 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 			if quotation != lexicalQuotationNone {
 				return nil, newLexicalError(i, text, "quotation not closed at the end of the line")
 			}
+			if tb.IsPresent() {
+				tokens = append(tokens, tb.Build())
+			}
 			tokens = append(tokens, LexicalToken{Kind: LexicalStop, Index: i})
 
 		case '\r':
 			if quotation != lexicalQuotationNone {
-				name.WriteByte(c)
+				tb.WriteChar(c, i)
 			}
 			continue
 
 		case ' ', '\t', '\v', '\f', 20:
 			if quotation == lexicalQuotationNone {
-				if name.Len() != 0 {
-					n := name.String()
-					tokens = append(tokens, LexicalToken{Kind: LexicalTokenIdentifier, Content: strings.TrimSpace(n), Index: i - len(n)})
-					name.Reset()
+				if tb.IsPresent() {
+					tokens = append(tokens, tb.Build())
 				}
 			} else {
-				name.WriteByte(c)
+				tb.WriteChar(c, i)
 			}
 
 		case '$':
 			if i+1 < texLen && text[i+1] == '(' {
 				// subshell
+				tb.SetIndexIfEmpty(i)
 				i += 2
 				var subshell strings.Builder
 				braceCount := 1
@@ -129,10 +198,10 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 				if _, err := io.Copy(subst, r); err != nil {
 					return nil, newLexicalError(i, text, fmt.Sprintf("failed to read subshell output: %v", err))
 				}
-				name.WriteString(strings.TrimSpace(subst.String()))
+				tb.WriteString(strings.TrimSpace(subst.String()), i)
 			} else {
 				// variable
-				startIndex := i - name.Len()
+				tb.SetIndexIfEmpty(i)
 				varName := strings.Builder{}
 				for i += 1; i < texLen; i++ {
 					c := text[i]
@@ -142,34 +211,34 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					}
 					varName.WriteByte(c)
 				}
-				name.WriteString(os.Getenv(varName.String()))
+				tb.WriteString(os.Getenv(varName.String()), i)
 				if quotation == lexicalQuotationNone {
-					token := LexicalToken{Kind: LexicalTokenIdentifier, Content: name.String(), Index: startIndex}
-					tokens = append(tokens, token)
-					name.Reset()
+					tokens = append(tokens, tb.Build())
 				}
 			}
 
 		case '"':
+			tb.SetIndexIfEmpty(i)
 			switch quotation {
 			case lexicalQuotationNone:
 				quotation = lexicalQuotationDouble
 			case lexicalQuotationDouble:
 				quotation = lexicalQuotationNone
 			case lexicalQuotationSingle:
-				name.WriteByte(c)
+				tb.WriteChar(c, i)
 			default:
 				return nil, newLexicalError(i, text, fmt.Sprintf("invalid quotation state: %d", quotation))
 			}
 
 		case '\'':
+			tb.SetIndexIfEmpty(i)
 			switch quotation {
 			case lexicalQuotationNone:
 				quotation = lexicalQuotationSingle
 			case lexicalQuotationSingle:
 				quotation = lexicalQuotationNone
 			case lexicalQuotationDouble:
-				name.WriteByte(c)
+				tb.WriteChar(c, i)
 			default:
 				return nil, newLexicalError(i, text, fmt.Sprintf("invalid quotation state: %d", quotation))
 			}
@@ -181,46 +250,46 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 				}
 			} else {
 				if i+1 < texLen {
-					i++
-					c = text[i]
+					c = text[i+1]
 					switch c {
 					case 'a':
-						name.WriteString("\a")
+						tb.WriteString("\a", i)
 					case 'b':
-						name.WriteString("\b")
+						tb.WriteString("\b", i)
 					case '$':
-						name.WriteString("$")
+						tb.WriteString("$", i)
 					case 'n', '\n':
-						name.WriteString("\n")
+						tb.WriteString("\n", i)
 					case 'r', '\r':
-						name.WriteString("\r")
+						tb.WriteString("\r", i)
 					case 't':
-						name.WriteString("\t")
+						tb.WriteString("\t", i)
 					case 'v':
-						name.WriteString("\v")
+						tb.WriteString("\v", i)
 					case 'f':
-						name.WriteString("\f")
+						tb.WriteString("\f", i)
 					case '\\':
-						name.WriteString("\\")
+						tb.WriteString("\\", i)
 					case '"':
-						name.WriteString("\"")
+						tb.WriteString("\"", i)
 					case '\'':
-						name.WriteString("'")
+						tb.WriteString("'", i)
 					case '0':
-						name.WriteString("\x00")
+						tb.WriteString("\x00", i)
 					case ';':
-						name.WriteString(";")
+						tb.WriteString(";", i)
 					case '&':
-						name.WriteString("&")
+						tb.WriteString("&", i)
 					case '|':
-						name.WriteString("|")
+						tb.WriteString("|", i)
 					case '>':
-						name.WriteString(">")
+						tb.WriteString(">", i)
 					case '<':
-						name.WriteString("<")
+						tb.WriteString("<", i)
 					default:
-						name.WriteString(fmt.Sprintf("\\%c", c))
+						tb.WriteString(fmt.Sprintf("\\%c", c), i)
 					}
+					i++
 				} else {
 					return nil, newLexicalError(i, text, "escape character at the end of the text")
 				}
@@ -228,22 +297,18 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 
 		case ';':
 			if quotation == lexicalQuotationNone {
-				if name.Len() != 0 {
-					n := name.String()
-					tokens = append(tokens, LexicalToken{Kind: LexicalTokenIdentifier, Content: strings.TrimSpace(n), Index: i - len(n)})
-					name.Reset()
+				if tb.IsPresent() {
+					tokens = append(tokens, tb.Build())
 				}
 				tokens = append(tokens, LexicalToken{Kind: LexicalStop, Index: i})
 			} else {
-				name.WriteByte(c)
+				tb.WriteChar(c, i)
 			}
 
 		case '&':
 			if quotation == lexicalQuotationNone {
-				if name.Len() != 0 {
-					n := name.String()
-					tokens = append(tokens, LexicalToken{Kind: LexicalTokenIdentifier, Content: strings.TrimSpace(n), Index: i - len(n)})
-					name.Reset()
+				if tb.IsPresent() {
+					tokens = append(tokens, tb.Build())
 				}
 				if i+1 < texLen && text[i+1] == '&' {
 					// &&
@@ -268,15 +333,13 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					break
 				}
 			} else {
-				name.WriteByte(c)
+				tb.WriteChar(c, i)
 			}
 
 		case '|':
 			if quotation == lexicalQuotationNone {
-				if name.Len() != 0 {
-					n := name.String()
-					tokens = append(tokens, LexicalToken{Kind: LexicalTokenIdentifier, Content: strings.TrimSpace(n), Index: i - len(n)})
-					name.Reset()
+				if tb.IsPresent() {
+					tokens = append(tokens, tb.Build())
 				}
 				if i+1 < texLen && text[i+1] == '|' {
 					tokens = append(tokens, LexicalToken{Kind: LexicalOr, Index: i})
@@ -288,15 +351,13 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					break
 				}
 			} else {
-				name.WriteByte(c)
+				tb.WriteChar(c, i)
 			}
 
 		case '>':
 			if quotation == lexicalQuotationNone {
-				if name.Len() != 0 {
-					n := name.String()
-					tokens = append(tokens, LexicalToken{Kind: LexicalTokenIdentifier, Content: strings.TrimSpace(n), Index: i - len(n)})
-					name.Reset()
+				if tb.IsPresent() {
+					tokens = append(tokens, tb.Build())
 				}
 				if i+1 < texLen && text[i+1] == '>' {
 					// >>
@@ -309,31 +370,29 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					break
 				}
 			}
-			name.WriteByte(c)
+			tb.WriteChar(c, i)
 
 		case '<':
 			if quotation == lexicalQuotationNone {
-				if name.Len() != 0 {
-					n := name.String()
-					tokens = append(tokens, LexicalToken{Kind: LexicalTokenIdentifier, Content: strings.TrimSpace(n), Index: i - len(n)})
-					name.Reset()
+				if tb.IsPresent() {
+					tokens = append(tokens, tb.Build())
 				}
 				if i+1 < texLen && text[i+1] == '<' {
 					// <<
-					t := LexicalToken{Kind: LexicalHereDocument, Index: i}
+					tb.SetIndexIfEmpty(i)
+					tb.SetKind(LexicalHereDocument)
 					// get the here document name
-					var docName string
+					docNameB := strings.Builder{}
 					for i += 2; i < texLen; i++ {
 						c := text[i]
 						if c == '\n' {
 							break
 						}
-						docName += string(c)
+						docNameB.WriteByte(c)
 					}
-					docName = strings.TrimSpace(docName)
+					docName := strings.TrimSpace(docNameB.String())
 					// get the here document content
-					docContent, err := func() (string, error) {
-						var docContent strings.Builder
+					err := func() error {
 						for i += 1; i < texLen; i++ {
 							c := text[i]
 							if c == '\n' {
@@ -349,19 +408,20 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 								lineContent := strings.TrimSpace(lineContentBuilder.String())
 								if lineContent == docName {
 									i += len(docName)
-									return docContent.String(), nil
+									return nil
 								}
 							}
-							docContent.WriteByte(c)
+							tb.WriteChar(c, i)
 						}
-						return "", newLexicalError(i, text, "here document not closed")
+						return newLexicalError(i, text, "here document not closed")
 					}()
 
 					if err != nil {
 						return nil, err
 					}
 
-					t.Content = strings.TrimSpace(docContent)
+					t := tb.Build()
+					t.Content = strings.TrimSpace(t.Content)
 					tokens = append(tokens, t)
 					break
 				} else {
@@ -370,11 +430,11 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					break
 				}
 			}
-			name.WriteByte(c)
+			tb.WriteChar(c, i)
 
 		case '1':
-			if name.Len() != 0 {
-				name.WriteByte(c)
+			if tb.IsPresent() {
+				tb.WriteChar(c, i)
 				break
 			}
 			if i+1 < texLen && text[i+1] == '>' {
@@ -387,11 +447,11 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					}
 				}
 			}
-			name.WriteByte(c)
+			tb.WriteChar(c, i)
 
 		case '2':
-			if name.Len() != 0 {
-				name.WriteByte(c)
+			if tb.IsPresent() {
+				tb.WriteChar(c, i)
 				break
 			}
 			if i+1 < texLen && text[i+1] == '>' {
@@ -414,18 +474,17 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					break
 				}
 			}
-			name.WriteByte(c)
+			tb.WriteChar(c, i)
 
 		default:
-			name.WriteByte(c)
+			tb.WriteChar(c, i)
 		}
 	}
 	if quotation != lexicalQuotationNone {
 		return nil, newLexicalError(len(text)-1, text, "quotation not closed")
 	}
-	if name.Len() != 0 {
-		n := name.String()
-		tokens = append(tokens, LexicalToken{Kind: LexicalTokenIdentifier, Content: strings.TrimSpace(n), Index: texLen - len(n)})
+	if tb.IsPresent() {
+		tokens = append(tokens, tb.Build())
 	}
 	// trim trailing LexicalStop tokens
 	for tokens[len(tokens)-1].Kind == LexicalStop {

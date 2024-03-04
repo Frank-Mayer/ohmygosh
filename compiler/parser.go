@@ -54,7 +54,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		token := tokens[i]
 		switch token.Kind {
 
-		case LexicalTokenIdentifier:
+		case LexicalIdentifier:
 			if command.Executable == "" {
 				command.Executable = token.Content
 			} else {
@@ -82,7 +82,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalFileStdout:
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
-				if targetToken.Kind == LexicalTokenIdentifier {
+				if targetToken.Kind == LexicalIdentifier {
 					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
@@ -100,7 +100,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalFileAppendStdout:
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
-				if targetToken.Kind == LexicalTokenIdentifier {
+				if targetToken.Kind == LexicalIdentifier {
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
@@ -118,7 +118,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalFileStderr:
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
-				if targetToken.Kind == LexicalTokenIdentifier {
+				if targetToken.Kind == LexicalIdentifier {
 					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
@@ -136,7 +136,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalFileAppendStderr:
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
-				if targetToken.Kind == LexicalTokenIdentifier {
+				if targetToken.Kind == LexicalIdentifier {
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
@@ -154,7 +154,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalFileStdoutAndStderr:
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
-				if targetToken.Kind == LexicalTokenIdentifier {
+				if targetToken.Kind == LexicalIdentifier {
 					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
@@ -173,7 +173,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalFileAppendStdoutAndStderr:
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
-				if targetToken.Kind == LexicalTokenIdentifier {
+				if targetToken.Kind == LexicalIdentifier {
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
@@ -198,7 +198,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalRedirectStdin:
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
-				if targetToken.Kind == LexicalTokenIdentifier {
+				if targetToken.Kind == LexicalIdentifier {
 					if r, err := newFileReader(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
