@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	if err := ohmygosh.Execute("echo \"hello $(whoami)\""); err != nil {
+	if err := ohmygosh.Execute(`echo "hello $(whoami)" | cat`); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

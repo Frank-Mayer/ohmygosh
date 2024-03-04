@@ -5,13 +5,17 @@ import (
 	"sync"
 )
 
+var pid int
+
 type pipe struct {
 	buffer []byte
 	mutex  sync.Mutex
+	pid    int
 }
 
 func newPipe() (io.Writer, io.Reader) {
-	p := &pipe{buffer: make([]byte, 0)}
+	p := &pipe{buffer: make([]byte, 0), mutex: sync.Mutex{}, pid: pid}
+	pid++
 	return p, p
 }
 

@@ -11,14 +11,11 @@ type (
 		Executable string
 		Arguments  []string
 		Background bool
-		// io.Writer is an interface, so it is a double pointer
-		Stdout *io.Writer
-		// io.Writer is an interface, so it is a double pointer
-		Stderr *io.Writer
-		// io.Reader is an interface, so it is a double pointer
-		Stdin *io.Reader
-		And   *Command
-		Or    *Command
+		Stdout     **io.Writer
+		Stderr     **io.Writer
+		Stdin      **io.Reader
+		And        *Command
+		Or         *Command
 	}
 )
 
@@ -72,9 +69,9 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalPipeStdout:
 			if i+1 < len(tokens) {
 				w, r := newPipe()
-				*command.Stdout = w
+				*command.Stdout = &w
 				done()
-				*command.Stdin = r
+				*command.Stdin = &r
 			} else {
 				return nil, newParserError(token.Index, text, "unexpected end of input after pipe")
 			}
@@ -86,7 +83,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stdout = w
+						*command.Stdout = &w
 						i++
 						done()
 					}
@@ -104,7 +101,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stdout = w
+						*command.Stdout = &w
 						i++
 						done()
 					}
@@ -122,7 +119,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stderr = w
+						*command.Stderr = &w
 						i++
 						done()
 					}
@@ -140,7 +137,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stderr = w
+						*command.Stderr = &w
 						i++
 						done()
 					}
@@ -158,8 +155,8 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stdout = w
-						*command.Stderr = w
+						*command.Stdout = &w
+						*command.Stderr = &w
 						i++
 						done()
 					}
@@ -177,8 +174,8 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stdout = w
-						*command.Stderr = w
+						*command.Stdout = &w
+						*command.Stderr = &w
 						i++
 						done()
 					}
@@ -202,7 +199,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if r, err := newFileReader(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stdin = r
+						*command.Stdin = &r
 						i++
 					}
 				} else {
@@ -213,8 +210,8 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			}
 
 		case LexicalHereDocument:
-			r := strings.NewReader(token.Content)
-			*command.Stdin = r
+			var r io.Reader = strings.NewReader(token.Content)
+			*command.Stdin = &r
 			done()
 
 		case LexicalAnd:
@@ -259,5 +256,8 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 }
 
 func newCommand(iop *ioProvider) *Command {
-	return &Command{Stdout: &iop.DefaultOut, Stderr: &iop.DefaultErr, Stdin: &iop.DefaultIn}
+	stdout := &iop.DefaultOut
+	stderr := &iop.DefaultErr
+	stdin := &iop.DefaultIn
+	return &Command{Stdout: &stdout, Stderr: &stderr, Stdin: &stdin}
 }

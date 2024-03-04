@@ -62,14 +62,14 @@ func (c *Command) Execute() error {
 		}
 	case "echo":
 		if c.Stdout != nil {
-			_, err = (*c.Stdout).Write([]byte(c.Arguments[0] + "\n"))
+			_, err = (**c.Stdout).Write([]byte(c.Arguments[0] + "\n"))
 		}
 	case "export":
 		if len(c.Arguments) > 0 {
 			for _, arg := range c.Arguments {
 				parts := strings.SplitN(arg, "=", 2)
-				if len(parts) == 2 {
-					os.Setenv(parts[0], parts[1])
+				if len(parts) >= 2 {
+					os.Setenv(parts[0], strings.Join(parts[1:], "="))
 				}
 			}
 		}
@@ -86,14 +86,14 @@ func (c *Command) Execute() error {
 			if err != nil {
 				break
 			}
-			_, err = (*c.Stdout).Write([]byte(u.Username + "\n"))
+			_, err = (**c.Stdout).Write([]byte(u.Username + "\n"))
 		}
 	case "pwd":
 		var pwd string
 		pwd, err = os.Getwd()
 		if err == nil {
 			if c.Stdout != nil {
-				_, err = (*c.Stdout).Write([]byte(pwd + "\n"))
+				_, err = (**c.Stdout).Write([]byte(pwd + "\n"))
 			}
 		}
 
@@ -112,9 +112,9 @@ func (c *Command) Execute() error {
 			Path: exe,
 			Args: append([]string{exe}, c.Arguments...),
 		}
-		cmd.Stdin = *c.Stdin
-		cmd.Stdout = *c.Stdout
-		cmd.Stderr = *c.Stderr
+		cmd.Stdin = **c.Stdin
+		cmd.Stdout = **c.Stdout
+		cmd.Stderr = **c.Stderr
 		err = cmd.Run()
 	}
 
