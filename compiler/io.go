@@ -21,13 +21,16 @@ func DefaultIoProvider() *ioProvider {
 	}
 }
 
-func TestIoProvider() *ioProvider {
+func TestIoProvider() (*ioProvider, io.Reader, io.Reader, io.Writer) {
+	outW, outR := newPipe()
+	errW, errR := newPipe()
+	inW, inR := newPipe()
 	return &ioProvider{
-		DefaultOut: os.Stdout,
-		DefaultErr: os.Stderr,
-		DefaultIn:  os.Stdin,
+		DefaultOut: outW,
+		DefaultErr: errW,
+		DefaultIn:  inR,
 		Closer:     NewCloser(),
-	}
+	}, outR, errR, inW
 }
 
 func subshellIoProvider(parent *ioProvider) (*ioProvider, io.Reader) {

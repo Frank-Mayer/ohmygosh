@@ -211,7 +211,7 @@ func TestParse(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("Case %d %q", i, c.text), func(t *testing.T) {
-			iop := compiler.TestIoProvider()
+			iop, _, _, _ := compiler.TestIoProvider()
 			defer iop.Close()
 			got, err := compiler.Parse(c.text, c.in, iop)
 			if err != nil {

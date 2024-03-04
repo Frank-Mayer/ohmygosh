@@ -111,21 +111,21 @@ func TestLexicalAnalysis(t *testing.T) {
 			"cat<<x\nfoo\nbar\nx",
 			[]compiler.LexicalToken{
 				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
-				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar", Index: 3},
+				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar\n", Index: 3},
 			},
 		},
 		{
 			"cat<<x\r\nfoo\r\nbar\r\nx\r\n",
 			[]compiler.LexicalToken{
 				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
-				{Kind: compiler.LexicalHereDocument, Content: "foo\r\nbar", Index: 3},
+				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar\n", Index: 3},
 			},
 		},
 		{
 			"cat << x\nfoo\nbar\nx\nrm -rf /",
 			[]compiler.LexicalToken{
 				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
-				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar", Index: 4},
+				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar\n", Index: 4},
 				{Kind: compiler.LexicalStop, Index: 18},
 				{Kind: compiler.LexicalIdentifier, Content: "rm", Index: 19},
 				{Kind: compiler.LexicalIdentifier, Content: "-rf", Index: 22},
@@ -136,7 +136,7 @@ func TestLexicalAnalysis(t *testing.T) {
 			"cat << x\nfoo\nbar\nx\nrm -rf /",
 			[]compiler.LexicalToken{
 				{Kind: compiler.LexicalIdentifier, Content: "cat", Index: 0},
-				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar", Index: 4},
+				{Kind: compiler.LexicalHereDocument, Content: "foo\nbar\n", Index: 4},
 				{Kind: compiler.LexicalStop, Index: 18},
 				{Kind: compiler.LexicalIdentifier, Content: "rm", Index: 19},
 				{Kind: compiler.LexicalIdentifier, Content: "-rf", Index: 22},
@@ -213,7 +213,7 @@ func TestLexicalAnalysis(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("%d %q", i, c.in), func(t *testing.T) {
-			iop := compiler.TestIoProvider()
+			iop, _, _, _ := compiler.TestIoProvider()
 			defer iop.Close()
 			got, err := compiler.LexicalAnalysis(c.in, iop)
 			if err != nil {

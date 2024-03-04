@@ -62,7 +62,7 @@ func (c *Command) Execute() error {
 		}
 	case "echo":
 		if c.Stdout != nil {
-			_, err = (**c.Stdout).Write([]byte(c.Arguments[0] + "\n"))
+			_, err = (**c.Stdout).Write([]byte(strings.Join(c.Arguments, " ") + "\n"))
 		}
 	case "export":
 		if len(c.Arguments) > 0 {

@@ -67,6 +67,10 @@ type (
 	LexicalTokenKind uint8
 )
 
+func (t LexicalToken) String() string {
+	return fmt.Sprintf("LexicalToken{Content: %q, Index: %d, Kind: %s}", t.Content, t.Index, t.Kind.String())
+}
+
 func newLexicalTokenBuilder() LexicalTokenBuilder {
 	b := LexicalTokenBuilder{}
 	b.Reset()
@@ -142,8 +146,7 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 	tb := newLexicalTokenBuilder()
 
 	for i := 0; i < texLen; i++ {
-		c := text[i]
-		switch c {
+		switch c := text[i]; c {
 
 		case '\n':
 			if quotation != lexicalQuotationNone {
@@ -250,8 +253,7 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 				}
 			} else {
 				if i+1 < texLen {
-					c = text[i+1]
-					switch c {
+					switch c = text[i+1]; c {
 					case 'a':
 						tb.WriteString("\a", i)
 					case 'b':
@@ -393,27 +395,30 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					docName := strings.TrimSpace(docNameB.String())
 					// get the here document content
 					err := func() error {
+						var lineContentBuilder strings.Builder
 						for i += 1; i < texLen; i++ {
-							c := text[i]
-							if c == '\n' {
-								// check if full line content is equal to the here document name
-								var lineContentBuilder strings.Builder
-								for j := i + 1; j < texLen; j++ {
-									c := text[j]
-									if c == '\n' {
-										break
-									}
-									lineContentBuilder.WriteByte(c)
-								}
-								lineContent := strings.TrimSpace(lineContentBuilder.String())
-								if lineContent == docName {
-									i += len(docName)
+							switch c := text[i]; c {
+							case '\n':
+								lineContent := lineContentBuilder.String()
+								if strings.TrimSpace(lineContent) == docName {
+									i--
 									return nil
+								} else {
+									lineContentBuilder.Reset()
+									tb.WriteString(lineContent, i)
+									tb.WriteRune('\n', i)
 								}
+							case '\r':
+								continue
+							default:
+								lineContentBuilder.WriteByte(c)
 							}
-							tb.WriteChar(c, i)
 						}
-						return newLexicalError(i, text, "here document not closed")
+						lineContent := lineContentBuilder.String()
+						if strings.TrimSpace(lineContent) == docName {
+							return nil
+						}
+						return newLexicalError(tb.Index, text, "here document not closed")
 					}()
 
 					if err != nil {
@@ -421,7 +426,7 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					}
 
 					t := tb.Build()
-					t.Content = strings.TrimSpace(t.Content)
+					t.Content = strings.Trim(t.Content, "\n") + "\n"
 					tokens = append(tokens, t)
 					break
 				} else {

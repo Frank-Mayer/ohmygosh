@@ -48,8 +48,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		command = newCommand(iop)
 	}
 	for i := 0; i < len(tokens); i++ {
-		token := tokens[i]
-		switch token.Kind {
+		switch token := tokens[i]; token.Kind {
 
 		case LexicalIdentifier:
 			if command.Executable == "" {
