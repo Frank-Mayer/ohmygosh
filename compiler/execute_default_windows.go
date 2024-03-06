@@ -56,6 +56,8 @@ func (c *Command) execute_default() error {
 
 	err := cmd.Run()
 	if err != nil {
+		fmt.Fprintf(**c.Stderr, "failed to execute command: %s\n", c.String())
+		fmt.Fprintln(**c.Stderr, err.Error())
 		return errors.Join(fmt.Errorf("failed to execute command %q", c.String()), err)
 	}
 	return nil
