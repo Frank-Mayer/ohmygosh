@@ -10,7 +10,10 @@ import (
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		print(">> ")
+		if wd, err := os.Getwd(); err == nil {
+			print(wd + " ")
+		}
+		print("$ ")
 		text, _ := reader.ReadString('\n')
 		_ = ohmygosh.Execute(text)
 	}
