@@ -44,7 +44,7 @@ func (c *Command) execute_exit() error {
 }
 
 func (c *Command) execute_echo() error {
-	fmt.Fprintln(**c.Stdout, c.Arguments)
+	fmt.Fprintln(**c.Stdout, strings.Join(c.Arguments, " "))
 	return nil
 }
 
