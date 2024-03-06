@@ -23,6 +23,22 @@ func TestLexicalAnalysis(t *testing.T) {
 			},
 		},
 		{
+			"echo $TEST/abc",
+			[]compiler.LexicalToken{
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "test_value/abc", Index: 5},
+			},
+		},
+		{
+			"echo $TEST foo bar",
+			[]compiler.LexicalToken{
+				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "test_value", Index: 5},
+				{Kind: compiler.LexicalIdentifier, Content: "foo", Index: 11},
+				{Kind: compiler.LexicalIdentifier, Content: "bar", Index: 15},
+			},
+		},
+		{
 			"echo $TEST;echo \"Hello World\"",
 			[]compiler.LexicalToken{
 				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 0},

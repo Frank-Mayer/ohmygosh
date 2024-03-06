@@ -215,9 +215,6 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					varName.WriteByte(c)
 				}
 				tb.WriteString(os.Getenv(varName.String()), i)
-				if quotation == lexicalQuotationNone {
-					tokens = append(tokens, tb.Build())
-				}
 			}
 
 		case '"':
