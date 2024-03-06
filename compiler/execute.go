@@ -3,12 +3,6 @@ package compiler
 import (
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
-	"os/user"
-	"path/filepath"
-	"strconv"
-	"strings"
 )
 
 func Execute(text string, iop *ioProvider) error {
@@ -49,73 +43,23 @@ func (c *Command) Execute() error {
 
 	switch c.Executable {
 	case "cd":
-		err = os.Chdir(c.Arguments[0])
+		err = c.execute_cd()
 	case "exit":
-		if len(c.Arguments) > 0 {
-			exitCode, err := strconv.Atoi(c.Arguments[0])
-			if err != nil {
-				return err
-			}
-			os.Exit(exitCode)
-		} else {
-			os.Exit(0)
-		}
+		err = c.execute_exit()
 	case "echo":
-		if c.Stdout != nil {
-			_, err = (**c.Stdout).Write([]byte(strings.Join(c.Arguments, " ") + "\n"))
-		}
+		err = c.execute_echo()
 	case "export":
-		if len(c.Arguments) > 0 {
-			for _, arg := range c.Arguments {
-				parts := strings.SplitN(arg, "=", 2)
-				if len(parts) >= 2 {
-					os.Setenv(parts[0], strings.Join(parts[1:], "="))
-				}
-			}
-		}
+		err = c.execute_export()
 	case "unset":
-		if len(c.Arguments) > 0 {
-			for _, arg := range c.Arguments {
-				os.Unsetenv(arg)
-			}
-		}
+		err = c.execute_unset()
 	case "whoami":
-		if c.Stdout != nil {
-			var u *user.User
-			u, err = user.Current()
-			if err != nil {
-				break
-			}
-			_, err = (**c.Stdout).Write([]byte(u.Username + "\n"))
-		}
+		err = c.execute_whoami()
 	case "pwd":
-		var pwd string
-		pwd, err = os.Getwd()
-		if err == nil {
-			if c.Stdout != nil {
-				_, err = (**c.Stdout).Write([]byte(pwd + "\n"))
-			}
-		}
-
+		err = c.execute_pwd()
+	case "sudo":
+		err = c.execute_sudo()
 	default:
-		var exe string
-		// look for the executable in the PATH
-		exe, err = exec.LookPath(c.Executable)
-		if err != nil {
-			// get absolute path
-			exe, err = filepath.Abs(c.Executable)
-			if err != nil {
-				exe = c.Executable
-			}
-		}
-		cmd := &exec.Cmd{
-			Path: exe,
-			Args: append([]string{exe}, c.Arguments...),
-		}
-		cmd.Stdin = **c.Stdin
-		cmd.Stdout = **c.Stdout
-		cmd.Stderr = **c.Stderr
-		err = cmd.Run()
+		err = c.execute_default()
 	}
 
 	if err != nil {
