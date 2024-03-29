@@ -68,6 +68,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		case LexicalPipeStdout:
 			if i+1 < len(tokens) {
 				w, r := newPipe()
+                command.Background = true
 				*command.Stdout = &w
 				done()
 				*command.Stdin = &r

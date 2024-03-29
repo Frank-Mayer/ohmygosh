@@ -97,7 +97,7 @@ func TestParse(t *testing.T) {
 				{
 					Executable: "command1",
 					Arguments:  []string{"arg1", "arg2"},
-					Background: false,
+					Background: true,
 				},
 				{
 					Executable: "command2",
@@ -129,7 +129,7 @@ func TestParse(t *testing.T) {
 				{
 					Executable: "command1",
 					Arguments:  []string{"arg1", "arg2"},
-					Background: false,
+					Background: true,
 				},
 				{
 					Executable: "command2",
