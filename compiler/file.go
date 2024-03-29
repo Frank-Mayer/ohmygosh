@@ -5,9 +5,23 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+
+	"github.com/Frank-Mayer/ohmygosh/dev"
 )
 
 func newFileWriter(c *closer, p string) (io.Writer, error) {
+	p = filepath.Clean(p)
+	switch p {
+	case "/dev/null":
+		return io.Discard, nil
+	case "/dev/stdout":
+		return os.Stdout, nil
+	case "/dev/stderr":
+		return os.Stderr, nil
+	case "/dev/stdin":
+		return os.Stdin, nil
+	}
 	f, err := os.OpenFile(p, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("could not open file %q", p), err)
@@ -23,6 +37,17 @@ func newFileWriter(c *closer, p string) (io.Writer, error) {
 }
 
 func newFileAppendWriter(c *closer, p string) (io.Writer, error) {
+	p = filepath.Clean(p)
+	switch p {
+	case "/dev/null":
+		return io.Discard, nil
+	case "/dev/stdout":
+		return os.Stdout, nil
+	case "/dev/stderr":
+		return os.Stderr, nil
+	case "/dev/stdin":
+		return os.Stdin, nil
+	}
 	f, err := os.OpenFile(p, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("could not open file %q", p), err)
@@ -32,6 +57,21 @@ func newFileAppendWriter(c *closer, p string) (io.Writer, error) {
 }
 
 func newFileReader(c *closer, p string) (io.Reader, error) {
+	p = filepath.Clean(p)
+	switch p {
+	case "/dev/stdout":
+		return os.Stdout, nil
+	case "/dev/stderr":
+		return os.Stderr, nil
+	case "/dev/stdin":
+		return os.Stdin, nil
+	case "/dev/zero":
+		return dev.NewZeroReader(), nil
+	case "/dev/random":
+		return dev.NewRandomReader(), nil
+	case "/dev/urandom":
+		return dev.NewUrandomReader(), nil
+	}
 	f, err := os.Open(p)
 	if err != nil {
 		return nil, errors.Join(fmt.Errorf("could not open file %q", p), err)
