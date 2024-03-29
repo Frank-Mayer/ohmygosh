@@ -5,6 +5,7 @@ package compiler
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 )
@@ -57,4 +58,13 @@ func (c *Command) execute_sudo() error {
 		return errors.Join(fmt.Errorf("failed to execute command %q", c.String()), err)
 	}
 	return nil
+}
+
+func isExecutable(path string) (string, bool) {
+	if fi, err := os.Stat(path); err == nil {
+		if fi.Mode()&0111 != 0 {
+			return path, true
+		}
+	}
+	return "", false
 }

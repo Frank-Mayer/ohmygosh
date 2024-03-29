@@ -5,8 +5,10 @@ package compiler
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func (c *Command) execute_default() error {
@@ -84,4 +86,19 @@ func (c *Command) execute_sudo() error {
 func exists(path string) bool {
 	_, err := exec.LookPath(path)
 	return err == nil
+}
+
+var pathExt = strings.Split(os.Getenv("PATHEXT"), string(os.PathListSeparator))
+
+func isExecutable(path string) (string, bool) {
+	if fi, err := os.Stat(path); err == nil && !fi.IsDir() {
+		return path, true
+	}
+	for _, ext := range pathExt {
+		extendedPath := path + strings.TrimSpace(ext)
+		if fi, err := os.Stat(extendedPath); err == nil && !fi.IsDir() {
+			return extendedPath, true
+		}
+	}
+	return "", false
 }

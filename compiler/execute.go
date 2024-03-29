@@ -3,6 +3,7 @@ package compiler
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 func Execute(text string, iop *ioProvider) error {
@@ -41,13 +42,15 @@ func Execute(text string, iop *ioProvider) error {
 func (c *Command) Execute() error {
 	var err error
 
-	switch c.Executable {
+	switch strings.ToLower(c.Executable) {
 	case "cd":
 		err = c.execute_cd()
 	case "exit":
 		err = c.execute_exit()
 	case "echo":
 		err = c.execute_echo()
+	case "cat":
+		err = c.execute_cat()
 	case "export":
 		err = c.execute_export()
 	case "unset":
@@ -56,8 +59,16 @@ func (c *Command) Execute() error {
 		err = c.execute_whoami()
 	case "pwd":
 		err = c.execute_pwd()
+	case "which", "where":
+		err = c.execute_which()
 	case "sudo":
 		err = c.execute_sudo()
+	case "yes":
+		err = c.execute_yes()
+	case "true":
+		err = c.execute_true()
+	case "false":
+		err = c.execute_false()
 	default:
 		err = c.execute_default()
 	}
