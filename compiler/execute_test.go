@@ -50,7 +50,6 @@ xyz`,
 	}
 
 	for i, c := range cases {
-		fmt.Println("exe", c.in)
 		t.Run(fmt.Sprintf("case %d %q", i, c.in), func(t *testing.T) {
 			iop, stdout, stderr := compiler.TestIoProvider(c.stdin)
 			defer iop.Close()

@@ -1,7 +1,6 @@
 package compiler
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -88,6 +87,5 @@ func (wr *wrappedReaderFakeCloser) Read(p []byte) (n int, err error) {
 }
 
 func (wr *wrappedReaderFakeCloser) Close() error {
-	fmt.Println("wrappedReader.Close")
 	return nil
 }
