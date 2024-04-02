@@ -489,7 +489,7 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 		tokens = append(tokens, tb.Build())
 	}
 	// trim trailing LexicalStop tokens
-	for tokens[len(tokens)-1].Kind == LexicalStop {
+	for len(tokens) > 0 && tokens[len(tokens)-1].Kind == LexicalStop {
 		tokens = tokens[:len(tokens)-1]
 	}
 	return tokens, nil

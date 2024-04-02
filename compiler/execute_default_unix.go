@@ -8,13 +8,15 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 func (c *Command) execute_default() error {
 	cmd := &exec.Cmd{
-		Stdin:  **c.Stdin,
-		Stdout: **c.Stdout,
-		Stderr: **c.Stderr,
+		Stdin:     **c.Stdin,
+		Stdout:    **c.Stdout,
+		Stderr:    **c.Stderr,
+		WaitDelay: 5 * time.Second,
 	}
 
 	if exe, err := exec.LookPath(c.Executable); err == nil {
