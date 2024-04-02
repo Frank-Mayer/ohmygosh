@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type ioProvider struct {
@@ -22,26 +23,34 @@ func DefaultIoProvider() *ioProvider {
 	}
 }
 
-func TestIoProvider() (*ioProvider, io.ReadCloser, io.ReadCloser, io.WriteCloser) {
-	outW, outR := newPipe()
-	errW, errR := newPipe()
-	inW, inR := newPipe()
+func TestIoProvider(stdin string) (*ioProvider, *strings.Builder, *strings.Builder) {
+	outSB := &strings.Builder{}
+	outW := WrapWriteFakeCloser(outSB)
+	errSB := &strings.Builder{}
+	errW := WrapWriteFakeCloser(errSB)
+	var inR io.Reader
+	if stdin == "" {
+		inR = os.Stdin
+	} else {
+		inR = strings.NewReader(stdin)
+	}
 	return &ioProvider{
 		DefaultOut: outW,
 		DefaultErr: errW,
 		DefaultIn:  inR,
 		Closer:     NewCloser(),
-	}, outR, errR, inW
+	}, outSB, errSB
 }
 
-func subshellIoProvider(parent *ioProvider) (*ioProvider, io.ReadCloser) {
-	w, r := newPipe()
+func subshellIoProvider(parent *ioProvider) (*ioProvider, *strings.Builder) {
+	sb := &strings.Builder{}
+	w := WrapWriteFakeCloser(sb)
 	return &ioProvider{
 		DefaultOut: w,
 		DefaultErr: parent.DefaultErr,
 		DefaultIn:  parent.DefaultIn,
 		Closer:     NewCloser(),
-	}, r
+	}, sb
 }
 
 func (i *ioProvider) Close() {

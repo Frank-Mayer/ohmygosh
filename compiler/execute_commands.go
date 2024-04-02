@@ -32,7 +32,7 @@ func (c *Command) execute_cd() error {
 		}
 		return os.Chdir(path)
 	default:
-		fmt.Fprintln(**c.Stderr, "cd: too many arguments")
+		_, _ = fmt.Fprintln(**c.Stderr, "cd: too many arguments")
 		return errors.New("cd: too many arguments")
 	}
 }
@@ -44,19 +44,19 @@ func (c *Command) execute_exit() error {
 	case 1:
 		code, err := strconv.Atoi(c.Arguments[0])
 		if err != nil {
-			fmt.Fprintln(**c.Stderr, "exit: ", err)
+			_, _ = fmt.Fprintln(**c.Stderr, "exit: ", err)
 			return errors.Join(fmt.Errorf("exit: failed to parse argument %q as an integer", c.Arguments[0]), err)
 		}
 		os.Exit(code)
 	default:
-		fmt.Fprintln(**c.Stderr, "exit: too many arguments")
+		_, _ = fmt.Fprintln(**c.Stderr, "exit: too many arguments")
 		return errors.New("exit: too many arguments")
 	}
 	return nil
 }
 
 func (c *Command) execute_echo() error {
-	fmt.Fprintln(**c.Stdout, strings.Join(c.Arguments, " "))
+	_, _ = fmt.Fprintln(**c.Stdout, strings.Join(c.Arguments, " "))
 	return nil
 }
 
@@ -66,12 +66,12 @@ func (c *Command) execute_cat() error {
 		for _, arg := range c.Arguments {
 			if f, err := os.Open(arg); err == nil {
 				if _, err := io.Copy(**c.Stdout, f); err != nil {
-					fmt.Fprintln(**c.Stderr, "cat: ", err)
+					_, _ = fmt.Fprintln(**c.Stderr, "cat: ", err)
 					return errors.Join(fmt.Errorf("cat: failed to copy file %q", arg), err)
 				}
 				f.Close()
 			} else {
-				fmt.Fprintln(**c.Stderr, "cat: ", err)
+				_, _ = fmt.Fprintln(**c.Stderr, "cat: ", err)
 				return errors.Join(fmt.Errorf("cat: failed to open file %q", arg), err)
 			}
 		}
@@ -85,7 +85,7 @@ func (c *Command) execute_cat() error {
 				if err == io.EOF {
 					break
 				}
-				fmt.Fprintln(**c.Stderr, "cat: ", err)
+				_, _ = fmt.Fprintln(**c.Stderr, "cat: ", err)
 				return errors.Join(errors.New("cat: failed to read from stdin"), err)
 			}
 		}
@@ -112,7 +112,7 @@ func (c *Command) execute_export() error {
 		}
 	} else {
 		for _, env := range os.Environ() {
-			fmt.Fprintf(**c.Stdout, "declare -x %s\n", env)
+			_, _ = fmt.Fprintf(**c.Stdout, "declare -x %s\n", env)
 		}
 	}
 	return nil
@@ -129,9 +129,9 @@ func (c *Command) execute_unset() error {
 
 func (c *Command) execute_whoami() error {
 	if u, err := user.Current(); err == nil {
-		fmt.Fprintln(**c.Stdout, u.Username)
+		_, _ = fmt.Fprintln(**c.Stdout, u.Username)
 	} else {
-		fmt.Fprintln(**c.Stderr, "whoami: ", err)
+		_, _ = fmt.Fprintln(**c.Stderr, "whoami: ", err)
 		return errors.Join(errors.New("whoami: failed to get current user"), err)
 	}
 	return nil
@@ -139,9 +139,9 @@ func (c *Command) execute_whoami() error {
 
 func (c *Command) execute_pwd() error {
 	if wd, err := os.Getwd(); err == nil {
-		fmt.Fprintln(**c.Stdout, wd)
+		_, _ = fmt.Fprintln(**c.Stdout, wd)
 	} else {
-		fmt.Fprintln(**c.Stderr, "pwd: ", err)
+		_, _ = fmt.Fprintln(**c.Stderr, "pwd: ", err)
 		return errors.Join(errors.New("pwd: failed to get working directory"), err)
 	}
 	return nil
@@ -165,7 +165,7 @@ func (c *Command) execute_which() error {
 				if exe, is := isExecutable(exe); is {
 					found = true
 					if !*silent {
-						fmt.Fprintln(**c.Stdout, exe)
+						_, _ = fmt.Fprintln(**c.Stdout, exe)
 					}
 					if !*all {
 						break
@@ -177,7 +177,7 @@ func (c *Command) execute_which() error {
 			}
 		}
 	} else {
-		fmt.Fprintln(**c.Stderr, "which: missing arguments")
+		_, _ = fmt.Fprintln(**c.Stderr, "which: missing arguments")
 		return errors.New("which: missing arguments")
 	}
 	return nil
@@ -186,12 +186,12 @@ func (c *Command) execute_which() error {
 func (c *Command) execute_yes() error {
 	if len(c.Arguments) == 0 {
 		for {
-			fmt.Fprintln(**c.Stdout, "y")
+			_, _ = fmt.Fprintln(**c.Stdout, "y")
 			<-time.After(200 * time.Millisecond)
 		}
 	} else {
 		for {
-			fmt.Fprintln(**c.Stdout, strings.Join(c.Arguments, " "))
+			_, _ = fmt.Fprintln(**c.Stdout, strings.Join(c.Arguments, " "))
 			<-time.After(200 * time.Millisecond)
 		}
 	}

@@ -34,7 +34,7 @@ func (c *Command) execute_default() error {
 
 	err := cmd.Run()
 	if err != nil {
-		fmt.Fprintf(**c.Stderr, "%s: failed to execute command: %s\n", filepath.Base(cmd.Path), err)
+		_, _ = fmt.Fprintf(**c.Stderr, "%s: failed to execute command: %s\n", filepath.Base(cmd.Path), err)
 		return errors.Join(fmt.Errorf("failed to execute command %q", c.String()), err)
 	}
 	return nil
@@ -43,7 +43,7 @@ func (c *Command) execute_default() error {
 func (c *Command) execute_sudo() error {
 	sudoPath, err := exec.LookPath("sudo")
 	if err != nil {
-		fmt.Fprintf(**c.Stderr, "sudo: %s\n", err)
+		_, _ = fmt.Fprintf(**c.Stderr, "sudo: %s\n", err)
 		return errors.Join(fmt.Errorf("failed to execute command %q", c.String()), err)
 	}
 	cmd := &exec.Cmd{
@@ -56,7 +56,7 @@ func (c *Command) execute_sudo() error {
 
 	err = cmd.Run()
 	if err != nil {
-		fmt.Fprintf(**c.Stderr, "sudo: failed to execute command: %s\n", err)
+		_, _ = fmt.Fprintf(**c.Stderr, "sudo: failed to execute command: %s\n", err)
 		return errors.Join(fmt.Errorf("failed to execute command %q", c.String()), err)
 	}
 	return nil

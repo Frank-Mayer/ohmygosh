@@ -69,7 +69,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				var w io.WriteCloser
 				var r io.Reader
-				w, r = newPipe()
+				w, r = NewPipe()
 				command.Background = true
 				*command.Stdout = &w
 				done()

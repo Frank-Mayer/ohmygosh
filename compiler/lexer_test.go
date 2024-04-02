@@ -9,7 +9,6 @@ import (
 )
 
 func TestLexicalAnalysis(t *testing.T) {
-	t.Parallel()
 	os.Setenv("TEST", "test_value")
 	cases := []struct {
 		in   string
@@ -229,7 +228,7 @@ func TestLexicalAnalysis(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("%d %q", i, c.in), func(t *testing.T) {
-			iop, _, _, _ := compiler.TestIoProvider()
+			iop, _, _ := compiler.TestIoProvider("")
 			defer iop.Close()
 			got, err := compiler.LexicalAnalysis(c.in, iop)
 			if err != nil {

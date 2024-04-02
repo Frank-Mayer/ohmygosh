@@ -27,22 +27,22 @@ func Execute(text string, iop *ioProvider) error {
 				defer wg.Done()
 				err := command.Execute()
 				stdout := **command.Stdout
-				stdout.Close()
+				_ = stdout.Close()
 				stderr := **command.Stderr
-				stderr.Close()
+				_ = stderr.Close()
 				iop.Close()
 				if err != nil {
 					err = errors.Join(fmt.Errorf("failed to execute command %d: %q", i, command.String()), err)
-					fmt.Fprintln(iop.DefaultErr, err)
+					_, _ = fmt.Fprintln(iop.DefaultErr, err)
 				}
 			}()
 		} else {
 			err := command.Execute()
 			iop.Close()
 			stdout := **command.Stdout
-			stdout.Close()
+			_ = stdout.Close()
 			stderr := **command.Stderr
-			stderr.Close()
+			_ = stderr.Close()
 			if err != nil {
 				return errors.Join(fmt.Errorf("failed to execute command %d: %q", i, command.String()), err)
 			}
