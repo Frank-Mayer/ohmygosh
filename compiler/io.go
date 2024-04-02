@@ -1,6 +1,7 @@
 package compiler
 
 import (
+	"fmt"
 	"io"
 	"os"
 )
@@ -8,15 +9,15 @@ import (
 type ioProvider struct {
 	DefaultOut io.WriteCloser
 	DefaultErr io.WriteCloser
-	DefaultIn  io.ReadCloser
+	DefaultIn  io.Reader
 	Closer     *closer
 }
 
 func DefaultIoProvider() *ioProvider {
 	return &ioProvider{
-		DefaultOut: WrapWriteCloser(os.Stdout),
-		DefaultErr: WrapWriteCloser(os.Stderr),
-		DefaultIn:  WrapReadFakeCloser(os.Stdin),
+		DefaultOut: WrapWriteFakeCloser(os.Stdout),
+		DefaultErr: WrapWriteFakeCloser(os.Stderr),
+		DefaultIn:  os.Stdin,
 		Closer:     NewCloser(),
 	}
 }
@@ -47,36 +48,37 @@ func (i *ioProvider) Close() {
 	i.Closer.Close()
 }
 
-func WrapWriteCloser(w io.Writer) io.WriteCloser {
-	wc := &wrappedWriter{w}
+func WrapWriteFakeCloser(w io.Writer) io.WriteCloser {
+	wc := &wrappedWriterFakeCloser{w}
 	return wc
 }
 
-type wrappedWriter struct {
+type wrappedWriterFakeCloser struct {
 	w io.Writer
 }
 
-func (ww *wrappedWriter) Write(p []byte) (n int, err error) {
+func (ww *wrappedWriterFakeCloser) Write(p []byte) (n int, err error) {
 	return ww.w.Write(p)
 }
 
-func (ww *wrappedWriter) Close() error {
+func (ww *wrappedWriterFakeCloser) Close() error {
 	return nil
 }
 
 func WrapReadFakeCloser(r io.Reader) io.ReadCloser {
-	wr := &wrappedReader{r}
+	wr := &wrappedReaderFakeCloser{r}
 	return wr
 }
 
-type wrappedReader struct {
+type wrappedReaderFakeCloser struct {
 	r io.Reader
 }
 
-func (wr *wrappedReader) Read(p []byte) (n int, err error) {
+func (wr *wrappedReaderFakeCloser) Read(p []byte) (n int, err error) {
 	return wr.r.Read(p)
 }
 
-func (_ *wrappedReader) Close() error {
+func (wr *wrappedReaderFakeCloser) Close() error {
+	fmt.Println("wrappedReader.Close")
 	return nil
 }

@@ -13,7 +13,7 @@ type (
 		Background bool
 		Stdout     **io.WriteCloser
 		Stderr     **io.WriteCloser
-		Stdin      **io.ReadCloser
+		Stdin      **io.Reader
 		And        *Command
 		Or         *Command
 	}
@@ -67,7 +67,9 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 
 		case LexicalPipeStdout:
 			if i+1 < len(tokens) {
-				w, r := newPipe()
+				var w io.WriteCloser
+				var r io.Reader
+				w, r = newPipe()
 				command.Background = true
 				*command.Stdout = &w
 				done()
@@ -101,7 +103,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						wc := WrapWriteCloser(w)
+						wc := WrapWriteFakeCloser(w)
 						*command.Stdout = &wc
 						i++
 						done()
@@ -138,7 +140,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						wc := WrapWriteCloser(w)
+						wc := WrapWriteFakeCloser(w)
 						*command.Stderr = &wc
 						i++
 						done()
@@ -176,7 +178,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						wc := WrapWriteCloser(w)
+						wc := WrapWriteFakeCloser(w)
 						*command.Stdout = &wc
 						*command.Stderr = &wc
 						i++
@@ -213,8 +215,8 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			}
 
 		case LexicalHereDocument:
-			rc := WrapReadFakeCloser(strings.NewReader(token.Content))
-			*command.Stdin = &rc
+			var r io.Reader = strings.NewReader(token.Content)
+			*command.Stdin = &r
 			done()
 
 		case LexicalAnd:

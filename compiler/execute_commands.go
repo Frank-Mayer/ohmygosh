@@ -22,7 +22,15 @@ func (c *Command) execute_cd() error {
 		}
 		return os.Chdir(home)
 	case 1:
-		return os.Chdir(c.Arguments[0])
+		path := c.Arguments[0]
+		if strings.HasPrefix(path, "~") {
+			if home, err := os.UserHomeDir(); err == nil {
+				path = filepath.Join(home, path[1:])
+			} else {
+				return errors.Join(errors.New("cd: failed to get home directory"), err)
+			}
+		}
+		return os.Chdir(path)
 	default:
 		fmt.Fprintln(**c.Stderr, "cd: too many arguments")
 		return errors.New("cd: too many arguments")

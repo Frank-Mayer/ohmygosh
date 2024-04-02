@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	Discard = WrapWriteCloser(io.Discard)
+	Discard = WrapWriteFakeCloser(io.Discard)
 )
 
 func newFileWriter(c *closer, p string) (io.WriteCloser, error) {
@@ -60,7 +60,7 @@ func newFileAppendWriter(c *closer, p string) (io.Writer, error) {
 	return f, nil
 }
 
-func newFileReader(c *closer, p string) (io.ReadCloser, error) {
+func newFileReader(c *closer, p string) (io.Reader, error) {
 	p = filepath.Clean(p)
 	switch p {
 	case "/dev/stdout":

@@ -26,8 +26,6 @@ func Execute(text string, iop *ioProvider) error {
 			go func() {
 				defer wg.Done()
 				err := command.Execute()
-				stdin := **command.Stdin
-				stdin.Close()
 				stdout := **command.Stdout
 				stdout.Close()
 				stderr := **command.Stderr
@@ -41,8 +39,6 @@ func Execute(text string, iop *ioProvider) error {
 		} else {
 			err := command.Execute()
 			iop.Close()
-			stdin := **command.Stdin
-			stdin.Close()
 			stdout := **command.Stdout
 			stdout.Close()
 			stderr := **command.Stderr
@@ -51,10 +47,8 @@ func Execute(text string, iop *ioProvider) error {
 				return errors.Join(fmt.Errorf("failed to execute command %d: %q", i, command.String()), err)
 			}
 		}
-		fmt.Printf("Command %q executed\n", command)
 	}
 
-	fmt.Println("Waiting")
 	wg.Wait()
 
 	return nil
@@ -64,32 +58,32 @@ func (c *Command) Execute() error {
 	var err error
 
 	switch strings.ToLower(c.Executable) {
-	// case "cd":
-	// 	err = c.execute_cd()
+	case "cd":
+		err = c.execute_cd()
 	case "exit":
 		err = c.execute_exit()
-	// case "echo":
-	// 	err = c.execute_echo()
-	// case "cat":
-	// 	err = c.execute_cat()
-	// case "export":
-	// 	err = c.execute_export()
-	// case "unset":
-	// 	err = c.execute_unset()
-	// case "whoami":
-	// 	err = c.execute_whoami()
-	// case "pwd":
-	// 	err = c.execute_pwd()
-	// case "which", "where":
-	// 	err = c.execute_which()
-	// case "sudo":
-	// 	err = c.execute_sudo()
-	// case "yes":
-	// 	err = c.execute_yes()
-	// case "true":
-	// 	err = c.execute_true()
-	// case "false":
-	// 	err = c.execute_false()
+	case "echo":
+		err = c.execute_echo()
+	case "cat":
+		err = c.execute_cat()
+	case "export":
+		err = c.execute_export()
+	case "unset":
+		err = c.execute_unset()
+	case "whoami":
+		err = c.execute_whoami()
+	case "pwd":
+		err = c.execute_pwd()
+	case "which":
+		err = c.execute_which()
+	case "sudo":
+		err = c.execute_sudo()
+	case "yes":
+		err = c.execute_yes()
+	case "true":
+		err = c.execute_true()
+	case "false":
+		err = c.execute_false()
 	default:
 		err = c.execute_default()
 	}
