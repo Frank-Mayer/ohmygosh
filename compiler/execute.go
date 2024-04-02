@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 func Execute(text string, iop *ioProvider) error {
@@ -17,24 +18,38 @@ func Execute(text string, iop *ioProvider) error {
 		return errors.Join(errors.New("failed to parse input"), err)
 	}
 
+	wg := sync.WaitGroup{}
+
 	for i, command := range commands {
 		if command.Background {
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				err := command.Execute()
+				stdout := **command.Stdout
+				_ = stdout.Close()
+				stderr := **command.Stderr
+				_ = stderr.Close()
 				iop.Close()
 				if err != nil {
 					err = errors.Join(fmt.Errorf("failed to execute command %d: %q", i, command.String()), err)
-					fmt.Fprintln(iop.DefaultErr, err)
+					_, _ = fmt.Fprintln(iop.DefaultErr, err)
 				}
 			}()
 		} else {
 			err := command.Execute()
 			iop.Close()
+			stdout := **command.Stdout
+			_ = stdout.Close()
+			stderr := **command.Stderr
+			_ = stderr.Close()
 			if err != nil {
 				return errors.Join(fmt.Errorf("failed to execute command %d: %q", i, command.String()), err)
 			}
 		}
 	}
+
+	wg.Wait()
 
 	return nil
 }
@@ -59,7 +74,7 @@ func (c *Command) Execute() error {
 		err = c.execute_whoami()
 	case "pwd":
 		err = c.execute_pwd()
-	case "which", "where":
+	case "which":
 		err = c.execute_which()
 	case "sudo":
 		err = c.execute_sudo()

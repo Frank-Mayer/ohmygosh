@@ -10,11 +10,15 @@ import (
 	"github.com/Frank-Mayer/ohmygosh/dev"
 )
 
-func newFileWriter(c *closer, p string) (io.Writer, error) {
+var (
+	Discard = WrapWriteFakeCloser(io.Discard)
+)
+
+func newFileWriter(c *closer, p string) (io.WriteCloser, error) {
 	p = filepath.Clean(p)
 	switch p {
 	case "/dev/null":
-		return io.Discard, nil
+		return Discard, nil
 	case "/dev/stdout":
 		return os.Stdout, nil
 	case "/dev/stderr":

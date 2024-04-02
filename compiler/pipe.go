@@ -2,33 +2,47 @@ package compiler
 
 import (
 	"io"
-	"sync"
+	"sync/atomic"
 )
 
 type pipe struct {
-	buffer []byte
-	mutex  sync.Mutex
+	buffer chan []byte
+	open   atomic.Bool
 }
 
-func newPipe() (io.Writer, io.Reader) {
-	p := &pipe{buffer: make([]byte, 0), mutex: sync.Mutex{}}
+func NewPipe() (io.WriteCloser, io.ReadCloser) {
+	p := &pipe{
+		buffer: make(chan []byte, 1),
+		open:   atomic.Bool{},
+	}
+	p.open.Store(true)
 	return p, p
 }
 
-func (p *pipe) Write(b []byte) (n int, err error) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	p.buffer = append(p.buffer, b...)
+func (p *pipe) Write(b []byte) (int, error) {
+	if !p.open.Load() {
+		return 0, io.ErrClosedPipe
+	}
+	p.buffer <- b
 	return len(b), nil
 }
 
-func (p *pipe) Read(b []byte) (n int, err error) {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	if len(p.buffer) == 0 {
+func (p *pipe) Read(b []byte) (int, error) {
+	if !p.open.Load() {
 		return 0, io.EOF
 	}
-	n = copy(b, p.buffer)
-	p.buffer = p.buffer[n:]
+	data, ok := <-p.buffer
+	if !ok {
+		return 0, io.EOF
+	}
+	n := copy(b, data)
 	return n, nil
+}
+
+func (p *pipe) Close() error {
+	if !p.open.Swap(false) {
+		return nil
+	}
+	close(p.buffer)
+	return nil
 }

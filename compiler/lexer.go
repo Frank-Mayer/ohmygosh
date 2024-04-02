@@ -2,7 +2,6 @@ package compiler
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strings"
 )
@@ -192,16 +191,12 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					subshell.WriteByte(c)
 					i++
 				}
-				iop, r := subshellIoProvider(iop)
+				iop, sb := subshellIoProvider(iop)
 				defer iop.Close()
 				if err := Execute(subshell.String(), iop); err != nil {
 					return nil, newLexicalError(i, text, fmt.Sprintf("failed to execute subshell: %v", err))
 				}
-				subst := new(strings.Builder)
-				if _, err := io.Copy(subst, r); err != nil {
-					return nil, newLexicalError(i, text, fmt.Sprintf("failed to read subshell output: %v", err))
-				}
-				tb.WriteString(strings.TrimSpace(subst.String()), i)
+				tb.WriteString(strings.TrimSpace(sb.String()), i)
 			} else {
 				// variable
 				tb.SetIndexIfEmpty(i)
@@ -489,7 +484,7 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 		tokens = append(tokens, tb.Build())
 	}
 	// trim trailing LexicalStop tokens
-	for tokens[len(tokens)-1].Kind == LexicalStop {
+	for len(tokens) > 0 && tokens[len(tokens)-1].Kind == LexicalStop {
 		tokens = tokens[:len(tokens)-1]
 	}
 	return tokens, nil

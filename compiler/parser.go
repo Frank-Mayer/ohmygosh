@@ -11,8 +11,8 @@ type (
 		Executable string
 		Arguments  []string
 		Background bool
-		Stdout     **io.Writer
-		Stderr     **io.Writer
+		Stdout     **io.WriteCloser
+		Stderr     **io.WriteCloser
 		Stdin      **io.Reader
 		And        *Command
 		Or         *Command
@@ -67,8 +67,10 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 
 		case LexicalPipeStdout:
 			if i+1 < len(tokens) {
-				w, r := newPipe()
-                command.Background = true
+				var w io.WriteCloser
+				var r io.Reader
+				w, r = NewPipe()
+				command.Background = true
 				*command.Stdout = &w
 				done()
 				*command.Stdin = &r
@@ -101,7 +103,8 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stdout = &w
+						wc := WrapWriteFakeCloser(w)
+						*command.Stdout = &wc
 						i++
 						done()
 					}
@@ -137,7 +140,8 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stderr = &w
+						wc := WrapWriteFakeCloser(w)
+						*command.Stderr = &wc
 						i++
 						done()
 					}
@@ -174,8 +178,9 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						*command.Stdout = &w
-						*command.Stderr = &w
+						wc := WrapWriteFakeCloser(w)
+						*command.Stdout = &wc
+						*command.Stderr = &wc
 						i++
 						done()
 					}
