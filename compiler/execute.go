@@ -25,7 +25,7 @@ func Execute(text string, iop *ioProvider) error {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				err := command.Execute()
+				err := command.Execute(iop)
 				stdout := **command.Stdout
 				_ = stdout.Close()
 				stderr := **command.Stderr
@@ -37,7 +37,7 @@ func Execute(text string, iop *ioProvider) error {
 				}
 			}()
 		} else {
-			err := command.Execute()
+			err := command.Execute(iop)
 			iop.Close()
 			stdout := **command.Stdout
 			_ = stdout.Close()
@@ -54,48 +54,48 @@ func Execute(text string, iop *ioProvider) error {
 	return nil
 }
 
-var builtinCommands map[string]func(*Command) error
+var builtinCommands map[string]func(*Command, *ioProvider) error
 
 func init() {
-	builtinCommands = map[string]func(*Command) error{
-		"cd":     (*Command).execute_cd,
-		"exit":   (*Command).execute_exit,
-		"echo":   (*Command).execute_echo,
-		"cat":    (*Command).execute_cat,
-		"export": (*Command).execute_export,
-		"unset":  (*Command).execute_unset,
-		"whoami": (*Command).execute_whoami,
-		"pwd":    (*Command).execute_pwd,
-		"which":  (*Command).execute_which,
-		"type":   (*Command).execute_type,
-		"sudo":   (*Command).execute_sudo,
-		"yes":    (*Command).execute_yes,
-		"true":   (*Command).execute_true,
-		"false":  (*Command).execute_false,
-		"sleep":  (*Command).execute_sleep,
+	builtinCommands = map[string]func(*Command, *ioProvider) error{
+		"cd":     execute_cd,
+		"exit":   execute_exit,
+		"echo":   execute_echo,
+		"cat":    execute_cat,
+		"export": execute_export,
+		"unset":  execute_unset,
+		"whoami": execute_whoami,
+		"pwd":    execute_pwd,
+		"which":  execute_which,
+		"type":   execute_type,
+		"sudo":   execute_sudo,
+		"yes":    execute_yes,
+		"true":   execute_true,
+		"false":  execute_false,
+		"sleep":  execute_sleep,
 	}
 }
 
-func (c *Command) Execute() error {
+func (c *Command) Execute(iop *ioProvider) error {
 	var err error
 
 	if fn, builtin := builtinCommands[strings.ToLower(c.Executable)]; builtin {
-		err = fn(c)
+		err = fn(c, iop)
 	} else {
-		err = c.execute_default()
+		err = execute_default(c, iop)
 	}
 
 	if err != nil {
 		// failed
 		if c.Or != nil {
-			return c.Or.Execute()
+			return c.Or.Execute(iop)
 		} else {
 			return err
 		}
 	} else {
 		// succeeded
 		if c.And != nil {
-			return c.And.Execute()
+			return c.And.Execute(iop)
 		}
 	}
 
