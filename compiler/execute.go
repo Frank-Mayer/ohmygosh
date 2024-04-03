@@ -54,37 +54,34 @@ func Execute(text string, iop *ioProvider) error {
 	return nil
 }
 
+var builtinCommands map[string]func(*Command) error
+
+func init() {
+	builtinCommands = map[string]func(*Command) error{
+		"cd":     (*Command).execute_cd,
+		"exit":   (*Command).execute_exit,
+		"echo":   (*Command).execute_echo,
+		"cat":    (*Command).execute_cat,
+		"export": (*Command).execute_export,
+		"unset":  (*Command).execute_unset,
+		"whoami": (*Command).execute_whoami,
+		"pwd":    (*Command).execute_pwd,
+		"which":  (*Command).execute_which,
+		"type":   (*Command).execute_type,
+		"sudo":   (*Command).execute_sudo,
+		"yes":    (*Command).execute_yes,
+		"true":   (*Command).execute_true,
+		"false":  (*Command).execute_false,
+		"sleep":  (*Command).execute_sleep,
+	}
+}
+
 func (c *Command) Execute() error {
 	var err error
 
-	switch strings.ToLower(c.Executable) {
-	case "cd":
-		err = c.execute_cd()
-	case "exit":
-		err = c.execute_exit()
-	case "echo":
-		err = c.execute_echo()
-	case "cat":
-		err = c.execute_cat()
-	case "export":
-		err = c.execute_export()
-	case "unset":
-		err = c.execute_unset()
-	case "whoami":
-		err = c.execute_whoami()
-	case "pwd":
-		err = c.execute_pwd()
-	case "which":
-		err = c.execute_which()
-	case "sudo":
-		err = c.execute_sudo()
-	case "yes":
-		err = c.execute_yes()
-	case "true":
-		err = c.execute_true()
-	case "false":
-		err = c.execute_false()
-	default:
+	if fn, builtin := builtinCommands[strings.ToLower(c.Executable)]; builtin {
+		err = fn(c)
+	} else {
 		err = c.execute_default()
 	}
 

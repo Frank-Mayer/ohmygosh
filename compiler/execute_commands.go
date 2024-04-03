@@ -147,8 +147,46 @@ func (c *Command) execute_pwd() error {
 	return nil
 }
 
+func findExecutable(name string, all bool) []string {
+	pathList := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
+	foundBinaries := []string{}
+
+	for _, path := range pathList {
+		exe := filepath.Join(path, name)
+		if exe, is := isExecutable(exe); is {
+			foundBinaries = append(foundBinaries, exe)
+			if !all {
+				break
+			}
+		}
+	}
+
+	return foundBinaries
+}
+
+func (c *Command) execute_type() error {
+	if len(c.Arguments) != 0 {
+		for _, arg := range c.Arguments {
+			if _, ok := builtinCommands[arg]; ok {
+				_, _ = fmt.Fprintf(**c.Stdout, "%s is a builtin\n", arg)
+				continue
+			}
+			foundBinaries := findExecutable(arg, false)
+			if len(foundBinaries) != 0 {
+				_, _ = fmt.Fprintf(**c.Stdout, "%s is %s\n", arg, foundBinaries[0])
+			} else {
+				_, _ = fmt.Fprintf(**c.Stderr, "type: could not find %s\n", arg)
+			}
+		}
+	} else {
+		_, _ = fmt.Fprintln(**c.Stderr, "type: missing arguments")
+		return errors.New("type: missing arguments")
+	}
+	return nil
+}
+
 func (c *Command) execute_which() error {
-	if len(c.Arguments) > 0 {
+	if len(c.Arguments) != 0 {
 		fs := flag.NewFlagSet("which", flag.ContinueOnError)
 		fs.SetOutput(**c.Stderr)
 		all := fs.Bool("a", false, "List all instances of executables found (instead of just the first one).")
@@ -157,23 +195,16 @@ func (c *Command) execute_which() error {
 			return errors.Join(fmt.Errorf("which: failed to parse arguments %q", c.Arguments), err)
 		}
 
-		pathList := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator))
 		for _, arg := range fs.Args() {
-			found := false
-			for _, path := range pathList {
-				exe := filepath.Join(path, arg)
-				if exe, is := isExecutable(exe); is {
-					found = true
-					if !*silent {
+			foundBinaries := findExecutable(arg, *all)
+			if len(foundBinaries) != 0 {
+				if !*silent {
+					for _, exe := range foundBinaries {
 						_, _ = fmt.Fprintln(**c.Stdout, exe)
 					}
-					if !*all {
-						break
-					}
 				}
-			}
-			if !found {
-				return fmt.Errorf("which: failed to find executable %q", arg)
+			} else {
+				return fmt.Errorf("which: %s not found", arg)
 			}
 		}
 	} else {
@@ -203,4 +234,24 @@ func (c *Command) execute_true() error {
 
 func (c *Command) execute_false() error {
 	return errors.New("false")
+}
+
+func (c *Command) execute_sleep() error {
+	if len(c.Arguments) == 0 {
+		return errors.New("sleep: missing operand")
+	}
+	if len(c.Arguments) > 1 {
+		return errors.New("sleep: too many arguments")
+	}
+	d, err := time.ParseDuration(c.Arguments[0])
+	if err != nil {
+		// try to parse the duration as a float
+		if f, err := strconv.ParseFloat(c.Arguments[0], 64); err == nil {
+			d = time.Duration(f * float64(time.Second))
+		} else {
+			return errors.Join(fmt.Errorf("sleep: failed to parse argument %q as a duration", c.Arguments[0]), err)
+		}
+	}
+	<-time.After(d)
+	return nil
 }

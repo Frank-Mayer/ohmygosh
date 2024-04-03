@@ -44,6 +44,10 @@ func main() {
   - [x] yes
   - [x] true
   - [x] false
+  - [x] sleep
+  - [ ] seq
+  - [ ] parallel
+  - [x] type
 - [x] Execute programs from PATH or with explicit path
 - [ ] Execute shell scripts
 - [ ] Shell functions
