@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func (c *Command) execute_default() error {
+func execute_default(c *Command, _ *ioProvider) error {
 	cmd := &exec.Cmd{
 		Stdin:  **c.Stdin,
 		Stdout: **c.Stdout,
@@ -60,7 +60,7 @@ func (c *Command) execute_default() error {
 	return nil
 }
 
-func (c *Command) execute_sudo() error {
+func execute_sudo(c *Command, _ *ioProvider) error {
 	sudoPath, err := exec.LookPath("sudo")
 	if err != nil {
 		_, _ = fmt.Fprintf(**c.Stderr, "sudo: %s\n", err)
