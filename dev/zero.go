@@ -1,6 +1,8 @@
 package dev
 
-import "io"
+import (
+	"io"
+)
 
 type zeroReader struct{}
 
@@ -10,7 +12,10 @@ func NewZeroReader() io.ReadWriteCloser {
 }
 
 func (z *zeroReader) Read(p []byte) (n int, err error) {
-	return 0, nil
+	for i := range p {
+		p[i] = byte(0)
+	}
+	return len(p), nil
 }
 
 func (_ *zeroReader) Write(p []byte) (n int, err error) {
