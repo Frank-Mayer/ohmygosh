@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Frank-Mayer/ohmygosh/compiler"
+	"github.com/Frank-Mayer/ohmygosh/runtime"
 )
 
 func TestLexicalAnalysis(t *testing.T) {
@@ -228,7 +229,7 @@ func TestLexicalAnalysis(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("%d %q", i, c.in), func(t *testing.T) {
-			iop, _, _ := compiler.TestIoProvider("")
+			iop, _, _ := runtime.TestIoProvider("")
 			defer iop.Close()
 			got, err := compiler.LexicalAnalysis(c.in, iop)
 			if err != nil {

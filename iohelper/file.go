@@ -1,4 +1,4 @@
-package compiler
+package iohelper
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ var (
 	Discard = WrapWriteFakeCloser(io.Discard)
 )
 
-func newFileWriter(c *closer, p string) (io.WriteCloser, error) {
+func NewFileWriter(c *Closer, p string) (io.WriteCloser, error) {
 	p = filepath.Clean(p)
 	switch p {
 	case "/dev/null":
@@ -40,7 +40,7 @@ func newFileWriter(c *closer, p string) (io.WriteCloser, error) {
 	return f, nil
 }
 
-func newFileAppendWriter(c *closer, p string) (io.Writer, error) {
+func NewFileAppendWriter(c *Closer, p string) (io.Writer, error) {
 	p = filepath.Clean(p)
 	switch p {
 	case "/dev/null":
@@ -60,7 +60,7 @@ func newFileAppendWriter(c *closer, p string) (io.Writer, error) {
 	return f, nil
 }
 
-func newFileReader(c *closer, p string) (io.Reader, error) {
+func NewFileReader(c *Closer, p string) (io.Reader, error) {
 	p = filepath.Clean(p)
 	switch p {
 	case "/dev/stdout":

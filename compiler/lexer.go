@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/Frank-Mayer/ohmygosh/runtime"
 )
 
 func (k LexicalTokenKind) String() string {
@@ -138,7 +140,7 @@ const (
 
 // LexicalAnalysis performs lexical analysis on the given text and returns a slice of tokens.
 // If an error gets returned it will be of type CompilerError.
-func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
+func LexicalAnalysis(text string, iop *runtime.IoProvider) ([]LexicalToken, error) {
 	texLen := len(text)
 	tokens := make([]LexicalToken, 0)
 	quotation := lexicalQuotationNone
@@ -191,7 +193,7 @@ func LexicalAnalysis(text string, iop *ioProvider) ([]LexicalToken, error) {
 					subshell.WriteByte(c)
 					i++
 				}
-				iop, sb := subshellIoProvider(iop)
+				iop, sb := runtime.SubshellIoProvider(iop)
 				defer iop.Close()
 				if err := Execute(subshell.String(), iop); err != nil {
 					return nil, newLexicalError(i, text, fmt.Sprintf("failed to execute subshell: %v", err))

@@ -1,51 +1,22 @@
 package compiler
 
 import (
-	"fmt"
 	"io"
 	"strings"
+
+	"github.com/Frank-Mayer/ohmygosh/iohelper"
+	"github.com/Frank-Mayer/ohmygosh/runtime"
 )
 
-type (
-	Command struct {
-		Executable string
-		Arguments  []string
-		Background bool
-		Stdout     **io.WriteCloser
-		Stderr     **io.WriteCloser
-		Stdin      **io.Reader
-		And        *Command
-		Or         *Command
-	}
-)
-
-func (c *Command) String() string {
-	str := strings.Builder{}
-	str.WriteString(c.Executable)
-	for _, arg := range c.Arguments {
-		str.WriteString(" ")
-		str.WriteString(fmt.Sprintf("%q", arg))
-	}
-	if c.Or != nil {
-		str.WriteString(" || ")
-		str.WriteString(c.Or.String())
-	}
-	if c.And != nil {
-		str.WriteString(" && ")
-		str.WriteString(c.And.String())
-	}
-	return str.String()
-}
-
-func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, error) {
-	commands := make([]*Command, 0)
-	command := newCommand(iop)
+func Parse(text string, tokens []LexicalToken, iop *runtime.IoProvider) ([]*runtime.Command, error) {
+	commands := make([]*runtime.Command, 0)
+	command := runtime.NewCommand(iop)
 	chainMode := false
 	done := func() {
 		if !chainMode {
 			commands = append(commands, command)
 		}
-		command = newCommand(iop)
+		command = runtime.NewCommand(iop)
 	}
 	for i := 0; i < len(tokens); i++ {
 		switch token := tokens[i]; token.Kind {
@@ -69,7 +40,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				var w io.WriteCloser
 				var r io.Reader
-				w, r = NewPipe()
+				w, r = iohelper.NewPipe()
 				command.Background = true
 				*command.Stdout = &w
 				done()
@@ -82,7 +53,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
 				if targetToken.Kind == LexicalIdentifier {
-					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
+					if w, err := iohelper.NewFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
 						*command.Stdout = &w
@@ -100,10 +71,10 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
 				if targetToken.Kind == LexicalIdentifier {
-					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
+					if w, err := iohelper.NewFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						wc := WrapWriteFakeCloser(w)
+						wc := iohelper.WrapWriteFakeCloser(w)
 						*command.Stdout = &wc
 						i++
 						done()
@@ -119,7 +90,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
 				if targetToken.Kind == LexicalIdentifier {
-					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
+					if w, err := iohelper.NewFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
 						*command.Stderr = &w
@@ -137,10 +108,10 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
 				if targetToken.Kind == LexicalIdentifier {
-					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
+					if w, err := iohelper.NewFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						wc := WrapWriteFakeCloser(w)
+						wc := iohelper.WrapWriteFakeCloser(w)
 						*command.Stderr = &wc
 						i++
 						done()
@@ -156,7 +127,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
 				if targetToken.Kind == LexicalIdentifier {
-					if w, err := newFileWriter(iop.Closer, targetToken.Content); err != nil {
+					if w, err := iohelper.NewFileWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
 						*command.Stdout = &w
@@ -175,10 +146,10 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
 				if targetToken.Kind == LexicalIdentifier {
-					if w, err := newFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
+					if w, err := iohelper.NewFileAppendWriter(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
-						wc := WrapWriteFakeCloser(w)
+						wc := iohelper.WrapWriteFakeCloser(w)
 						*command.Stdout = &wc
 						*command.Stderr = &wc
 						i++
@@ -201,7 +172,7 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				targetToken := tokens[i+1]
 				if targetToken.Kind == LexicalIdentifier {
-					if r, err := newFileReader(iop.Closer, targetToken.Content); err != nil {
+					if r, err := iohelper.NewFileReader(iop.Closer, targetToken.Content); err != nil {
 						return nil, newParserError(targetToken.Index, text, err.Error())
 					} else {
 						*command.Stdin = &r
@@ -223,12 +194,12 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				if chainMode {
 					// this is NOT the first command in the chain
-					command.And = newCommand(iop)
+					command.And = runtime.NewCommand(iop)
 					command = command.And
 				} else {
 					// this is the first command in the chain
 					chainMode = true
-					command.And = newCommand(iop)
+					command.And = runtime.NewCommand(iop)
 					commands = append(commands, command)
 					command = command.And
 				}
@@ -240,12 +211,12 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 			if i+1 < len(tokens) {
 				if chainMode {
 					// this is NOT the first command in the chain
-					command.Or = newCommand(iop)
+					command.Or = runtime.NewCommand(iop)
 					command = command.Or
 				} else {
 					// this is the first command in the chain
 					chainMode = true
-					command.Or = newCommand(iop)
+					command.Or = runtime.NewCommand(iop)
 					commands = append(commands, command)
 					command = command.Or
 				}
@@ -258,11 +229,4 @@ func Parse(text string, tokens []LexicalToken, iop *ioProvider) ([]*Command, err
 		commands = append(commands, command)
 	}
 	return commands, nil
-}
-
-func newCommand(iop *ioProvider) *Command {
-	stdout := &iop.DefaultOut
-	stderr := &iop.DefaultErr
-	stdin := &iop.DefaultIn
-	return &Command{Stdout: &stdout, Stderr: &stderr, Stdin: &stdin}
 }

@@ -7,14 +7,15 @@ import (
 	"testing"
 
 	"github.com/Frank-Mayer/ohmygosh/compiler"
+	"github.com/Frank-Mayer/ohmygosh/runtime"
 )
 
 func TestParse(t *testing.T) {
 	cases := []struct {
 		text string
 		in   []compiler.LexicalToken
-		out  []compiler.Command
-		fn   func(a *compiler.Command, b *compiler.Command) error
+		out  []runtime.Command
+		fn   func(a *runtime.Command, b *runtime.Command) error
 	}{
 
 		{
@@ -24,7 +25,7 @@ func TestParse(t *testing.T) {
 				{Kind: compiler.LexicalIdentifier, Content: "Hello World", Index: 5},
 				{Kind: compiler.LexicalStop, Index: 16},
 			},
-			[]compiler.Command{
+			[]runtime.Command{
 				{
 					Executable: "echo",
 					Arguments:  []string{"Hello World"},
@@ -43,12 +44,12 @@ func TestParse(t *testing.T) {
 				{Kind: compiler.LexicalOr, Index: 18},
 				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 21},
 			},
-			[]compiler.Command{
+			[]runtime.Command{
 				{
 					Executable: "command1",
 					Arguments:  []string{"arg1", "arg2"},
 					Background: false,
-					Or: &compiler.Command{
+					Or: &runtime.Command{
 						Executable: "command2",
 						Arguments:  []string{},
 						Background: false,
@@ -67,12 +68,12 @@ func TestParse(t *testing.T) {
 				{Kind: compiler.LexicalAnd, Index: 18},
 				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 21},
 			},
-			[]compiler.Command{
+			[]runtime.Command{
 				{
 					Executable: "command1",
 					Arguments:  []string{"arg1", "arg2"},
 					Background: false,
-					And: &compiler.Command{
+					And: &runtime.Command{
 						Executable: "command2",
 						Arguments:  []string{},
 						Background: false,
@@ -92,7 +93,7 @@ func TestParse(t *testing.T) {
 				{Kind: compiler.LexicalPipeStdout, Index: 23},
 				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 25},
 			},
-			[]compiler.Command{
+			[]runtime.Command{
 				{
 					Executable: "command1",
 					Arguments:  []string{"arg1", "arg2"},
@@ -104,7 +105,7 @@ func TestParse(t *testing.T) {
 					Background: false,
 				},
 			},
-			func(a *compiler.Command, b *compiler.Command) error {
+			func(a *runtime.Command, b *runtime.Command) error {
 				if a.Executable != "command1" {
 					return nil
 				}
@@ -124,7 +125,7 @@ func TestParse(t *testing.T) {
 				{Kind: compiler.LexicalPipeStdout, Index: 18},
 				{Kind: compiler.LexicalIdentifier, Content: "command2", Index: 21},
 			},
-			[]compiler.Command{
+			[]runtime.Command{
 				{
 					Executable: "command1",
 					Arguments:  []string{"arg1", "arg2"},
@@ -136,7 +137,7 @@ func TestParse(t *testing.T) {
 					Background: false,
 				},
 			},
-			func(a *compiler.Command, b *compiler.Command) error {
+			func(a *runtime.Command, b *runtime.Command) error {
 				if *a.Stderr == *a.Stdout {
 					return errors.New("stderr and stdout should not be the same for command1")
 				}
@@ -155,16 +156,16 @@ func TestParse(t *testing.T) {
 				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 16},
 				{Kind: compiler.LexicalIdentifier, Content: "meep", Index: 21},
 			},
-			[]compiler.Command{
+			[]runtime.Command{
 				{
 					Executable: "meep",
 					Arguments:  []string{},
 					Background: false,
-					Or: &compiler.Command{
+					Or: &runtime.Command{
 						Executable: "echo",
 						Arguments:  []string{"ok"},
 						Background: false,
-						And: &compiler.Command{
+						And: &runtime.Command{
 							Executable: "echo",
 							Arguments:  []string{"meep"},
 							Background: false,
@@ -187,16 +188,16 @@ func TestParse(t *testing.T) {
 				{Kind: compiler.LexicalIdentifier, Content: "echo", Index: 20},
 				{Kind: compiler.LexicalIdentifier, Content: "3", Index: 25},
 			},
-			[]compiler.Command{
+			[]runtime.Command{
 				{
 					Executable: "echo",
 					Arguments:  []string{"1"},
 					Background: false,
-					And: &compiler.Command{
+					And: &runtime.Command{
 						Executable: "echo",
 						Arguments:  []string{"2"},
 						Background: false,
-						Or: &compiler.Command{
+						Or: &runtime.Command{
 							Executable: "echo",
 							Arguments:  []string{"3"},
 							Background: false,
@@ -210,7 +211,7 @@ func TestParse(t *testing.T) {
 
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("Case %d %q", i, c.text), func(t *testing.T) {
-			iop, _, _ := compiler.TestIoProvider("")
+			iop, _, _ := runtime.TestIoProvider("")
 			defer iop.Close()
 			got, err := compiler.Parse(c.text, c.in, iop)
 			if err != nil {
@@ -237,7 +238,7 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func cmdEq(got *compiler.Command, expected *compiler.Command, recursion int) error {
+func cmdEq(got *runtime.Command, expected *runtime.Command, recursion int) error {
 	if recursion > 10 {
 		return fmt.Errorf("recursion limit reached")
 	}

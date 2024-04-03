@@ -1,4 +1,4 @@
-package compiler
+package runtime
 
 import (
 	"errors"
@@ -11,9 +11,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Frank-Mayer/ohmygosh/iohelper"
 )
 
-func execute_cd(c *Command, _ *ioProvider) error {
+func execute_cd(c *Command, _ *IoProvider) error {
 	switch len(c.Arguments) {
 	case 0:
 		home, err := os.UserHomeDir()
@@ -37,7 +39,7 @@ func execute_cd(c *Command, _ *ioProvider) error {
 	}
 }
 
-func execute_exit(c *Command, _ *ioProvider) error {
+func execute_exit(c *Command, _ *IoProvider) error {
 	switch len(c.Arguments) {
 	case 0:
 		os.Exit(0)
@@ -55,16 +57,16 @@ func execute_exit(c *Command, _ *ioProvider) error {
 	return nil
 }
 
-func execute_echo(c *Command, _ *ioProvider) error {
+func execute_echo(c *Command, _ *IoProvider) error {
 	_, _ = fmt.Fprintln(**c.Stdout, strings.Join(c.Arguments, " "))
 	return nil
 }
 
-func execute_cat(c *Command, iop *ioProvider) error {
+func execute_cat(c *Command, iop *IoProvider) error {
 	if len(c.Arguments) > 0 {
 		// for each argument, open the file and copy its contents to stdout
 		for _, arg := range c.Arguments {
-			r, err := newFileReader(iop.Closer, arg)
+			r, err := iohelper.NewFileReader(iop.Closer, arg)
 			if err != nil {
 				return errors.Join(fmt.Errorf("cat: failed to open file %q", arg), err)
 			}
@@ -91,7 +93,7 @@ func execute_cat(c *Command, iop *ioProvider) error {
 	return nil
 }
 
-func execute_export(c *Command, _ *ioProvider) error {
+func execute_export(c *Command, _ *IoProvider) error {
 	if len(c.Arguments) > 0 {
 		for _, arg := range c.Arguments {
 			pair := os.ExpandEnv(arg)
@@ -116,7 +118,7 @@ func execute_export(c *Command, _ *ioProvider) error {
 	return nil
 }
 
-func execute_unset(c *Command, _ *ioProvider) error {
+func execute_unset(c *Command, _ *IoProvider) error {
 	if len(c.Arguments) > 0 {
 		for _, arg := range c.Arguments {
 			os.Unsetenv(arg)
@@ -125,7 +127,7 @@ func execute_unset(c *Command, _ *ioProvider) error {
 	return nil
 }
 
-func execute_whoami(c *Command, _ *ioProvider) error {
+func execute_whoami(c *Command, _ *IoProvider) error {
 	if u, err := user.Current(); err == nil {
 		_, _ = fmt.Fprintln(**c.Stdout, u.Username)
 	} else {
@@ -135,7 +137,7 @@ func execute_whoami(c *Command, _ *ioProvider) error {
 	return nil
 }
 
-func execute_pwd(c *Command, _ *ioProvider) error {
+func execute_pwd(c *Command, _ *IoProvider) error {
 	if wd, err := os.Getwd(); err == nil {
 		_, _ = fmt.Fprintln(**c.Stdout, wd)
 	} else {
@@ -162,10 +164,10 @@ func findExecutable(name string, all bool) []string {
 	return foundBinaries
 }
 
-func execute_type(c *Command, _ *ioProvider) error {
+func execute_type(c *Command, _ *IoProvider) error {
 	if len(c.Arguments) != 0 {
 		for _, arg := range c.Arguments {
-			if _, ok := builtinCommands[arg]; ok {
+			if _, ok := BuiltinCommands[arg]; ok {
 				_, _ = fmt.Fprintf(**c.Stdout, "%s is a builtin\n", arg)
 				continue
 			}
@@ -183,7 +185,7 @@ func execute_type(c *Command, _ *ioProvider) error {
 	return nil
 }
 
-func execute_which(c *Command, _ *ioProvider) error {
+func execute_which(c *Command, _ *IoProvider) error {
 	if len(c.Arguments) != 0 {
 		fs := flag.NewFlagSet("which", flag.ContinueOnError)
 		fs.SetOutput(**c.Stderr)
@@ -212,7 +214,7 @@ func execute_which(c *Command, _ *ioProvider) error {
 	return nil
 }
 
-func execute_yes(c *Command, _ *ioProvider) error {
+func execute_yes(c *Command, _ *IoProvider) error {
 	if len(c.Arguments) == 0 {
 		for {
 			_, _ = fmt.Fprintln(**c.Stdout, "y")
@@ -226,15 +228,15 @@ func execute_yes(c *Command, _ *ioProvider) error {
 	}
 }
 
-func execute_true(c *Command, _ *ioProvider) error {
+func execute_true(c *Command, _ *IoProvider) error {
 	return nil
 }
 
-func execute_false(c *Command, _ *ioProvider) error {
+func execute_false(c *Command, _ *IoProvider) error {
 	return errors.New("false")
 }
 
-func execute_sleep(c *Command, _ *ioProvider) error {
+func execute_sleep(c *Command, _ *IoProvider) error {
 	if len(c.Arguments) == 0 {
 		return errors.New("sleep: missing operand")
 	}

@@ -1,17 +1,17 @@
-package compiler_test
+package iohelper_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/Frank-Mayer/ohmygosh/compiler"
+	"github.com/Frank-Mayer/ohmygosh/iohelper"
 )
 
 func TestPipe(t *testing.T) {
 	t.Run("simle write and read", func(t *testing.T) {
 		t.Parallel()
 
-		w, r := compiler.NewPipe()
+		w, r := iohelper.NewPipe()
 		defer w.Close()
 		defer r.Close()
 
@@ -41,7 +41,7 @@ func TestPipe(t *testing.T) {
 	t.Run("io.copy", func(t *testing.T) {
 		t.Parallel()
 
-		w, r := compiler.NewPipe()
+		w, r := iohelper.NewPipe()
 		defer w.Close()
 		defer r.Close()
 
@@ -68,7 +68,7 @@ func TestPipe(t *testing.T) {
 	t.Run("fmt", func(t *testing.T) {
 		t.Parallel()
 
-		w, r := compiler.NewPipe()
+		w, r := iohelper.NewPipe()
 		defer w.Close()
 		defer r.Close()
 

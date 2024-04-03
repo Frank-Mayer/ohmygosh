@@ -1,6 +1,6 @@
 //go:build windows
 
-package compiler
+package runtime
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func execute_default(c *Command, _ *ioProvider) error {
+func Execute_default(c *Command, _ *IoProvider) error {
 	cmd := &exec.Cmd{
 		Stdin:  **c.Stdin,
 		Stdout: **c.Stdout,
@@ -60,7 +60,7 @@ func execute_default(c *Command, _ *ioProvider) error {
 	return nil
 }
 
-func execute_sudo(c *Command, _ *ioProvider) error {
+func execute_sudo(c *Command, _ *IoProvider) error {
 	sudoPath, err := exec.LookPath("sudo")
 	if err != nil {
 		_, _ = fmt.Fprintf(**c.Stderr, "sudo: %s\n", err)

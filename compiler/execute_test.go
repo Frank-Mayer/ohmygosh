@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Frank-Mayer/ohmygosh/compiler"
+	"github.com/Frank-Mayer/ohmygosh/runtime"
 )
 
 func TestExecute(t *testing.T) {
@@ -51,7 +52,7 @@ xyz`,
 
 	for i, c := range cases {
 		t.Run(fmt.Sprintf("case %d %q", i, c.in), func(t *testing.T) {
-			iop, stdout, stderr := compiler.TestIoProvider(c.stdin)
+			iop, stdout, stderr := runtime.TestIoProvider(c.stdin)
 			defer iop.Close()
 			if err := compiler.Execute(c.in, iop); err != nil {
 				t.Error(err)

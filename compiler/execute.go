@@ -3,11 +3,12 @@ package compiler
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
+
+	"github.com/Frank-Mayer/ohmygosh/runtime"
 )
 
-func Execute(text string, iop *ioProvider) error {
+func Execute(text string, iop *runtime.IoProvider) error {
 	tokens, err := LexicalAnalysis(text, iop)
 	if err != nil {
 		return errors.Join(errors.New("failed to lexically analyze input"), err)
@@ -50,54 +51,6 @@ func Execute(text string, iop *ioProvider) error {
 	}
 
 	wg.Wait()
-
-	return nil
-}
-
-var builtinCommands map[string]func(*Command, *ioProvider) error
-
-func init() {
-	builtinCommands = map[string]func(*Command, *ioProvider) error{
-		"cd":     execute_cd,
-		"exit":   execute_exit,
-		"echo":   execute_echo,
-		"cat":    execute_cat,
-		"export": execute_export,
-		"unset":  execute_unset,
-		"whoami": execute_whoami,
-		"pwd":    execute_pwd,
-		"which":  execute_which,
-		"type":   execute_type,
-		"sudo":   execute_sudo,
-		"yes":    execute_yes,
-		"true":   execute_true,
-		"false":  execute_false,
-		"sleep":  execute_sleep,
-	}
-}
-
-func (c *Command) Execute(iop *ioProvider) error {
-	var err error
-
-	if fn, builtin := builtinCommands[strings.ToLower(c.Executable)]; builtin {
-		err = fn(c, iop)
-	} else {
-		err = execute_default(c, iop)
-	}
-
-	if err != nil {
-		// failed
-		if c.Or != nil {
-			return c.Or.Execute(iop)
-		} else {
-			return err
-		}
-	} else {
-		// succeeded
-		if c.And != nil {
-			return c.And.Execute(iop)
-		}
-	}
 
 	return nil
 }

@@ -1,4 +1,4 @@
-package compiler
+package iohelper
 
 import (
 	"sync"
@@ -12,14 +12,14 @@ type (
 		Close()
 	}
 
-	closer struct {
+	Closer struct {
 		mutex     sync.Mutex
 		closable  []*closable
 		closableE []*closableE
 	}
 )
 
-func (c *closer) Close() {
+func (c *Closer) Close() {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	wg := sync.WaitGroup{}
@@ -39,20 +39,20 @@ func (c *closer) Close() {
 	wg.Wait()
 }
 
-func (c *closer) Add(v closable) {
+func (c *Closer) Add(v closable) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.closable = append(c.closable, &v)
 }
 
-func (c *closer) AddE(v closableE) {
+func (c *Closer) AddE(v closableE) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	c.closableE = append(c.closableE, &v)
 }
 
-func NewCloser() *closer {
-	return &closer{
+func NewCloser() *Closer {
+	return &Closer{
 		closable:  make([]*closable, 0),
 		closableE: make([]*closableE, 0),
 		mutex:     sync.Mutex{},
