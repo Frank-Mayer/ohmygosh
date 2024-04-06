@@ -13,11 +13,11 @@ func NewUrandomReader() io.ReadWriteCloser {
 }
 
 func (_ *urandomReader) Read(p []byte) (n int, err error) {
-	return rand.Reader.Read(p)
+	return rand.Read(p)
 }
 
 func (_ *urandomReader) Write(p []byte) (n int, err error) {
-	return 0, nil
+	return io.Discard.Write(p)
 }
 
 func (_ *urandomReader) Close() error {

@@ -19,7 +19,7 @@ func (z *zeroReader) Read(p []byte) (n int, err error) {
 }
 
 func (_ *zeroReader) Write(p []byte) (n int, err error) {
-	return len(p), nil
+	return io.Discard.Write(p)
 }
 
 func (_ *zeroReader) Close() error {
