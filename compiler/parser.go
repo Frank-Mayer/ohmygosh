@@ -4,8 +4,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/Frank-Mayer/ohmygosh/iohelper"
-	"github.com/Frank-Mayer/ohmygosh/runtime"
+	"github.com/tsukinoko-kun/ohmygosh/iohelper"
+	"github.com/tsukinoko-kun/ohmygosh/runtime"
 )
 
 func Parse(text string, tokens []LexicalToken, iop *runtime.IoProvider) ([]*runtime.Command, error) {

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Frank-Mayer/ohmygosh/compiler"
-	"github.com/Frank-Mayer/ohmygosh/runtime"
+	"github.com/tsukinoko-kun/ohmygosh/compiler"
+	"github.com/tsukinoko-kun/ohmygosh/runtime"
 )
 
 func TestParse(t *testing.T) {

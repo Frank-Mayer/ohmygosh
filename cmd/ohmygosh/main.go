@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/Frank-Mayer/ohmygosh"
+	"github.com/tsukinoko-kun/ohmygosh"
 )
 
 func main() {

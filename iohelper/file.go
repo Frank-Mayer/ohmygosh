@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Frank-Mayer/ohmygosh/dev"
+	"github.com/tsukinoko-kun/ohmygosh/dev"
 )
 
 var (

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Frank-Mayer/ohmygosh/compiler"
-	"github.com/Frank-Mayer/ohmygosh/runtime"
+	"github.com/tsukinoko-kun/ohmygosh/compiler"
+	"github.com/tsukinoko-kun/ohmygosh/runtime"
 )
 
 func TestLexicalAnalysis(t *testing.T) {

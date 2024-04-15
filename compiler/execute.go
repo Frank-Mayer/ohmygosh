@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Frank-Mayer/ohmygosh/runtime"
+	"github.com/tsukinoko-kun/ohmygosh/runtime"
 )
 
 func Execute(text string, iop *runtime.IoProvider) error {

@@ -3,7 +3,7 @@
 ## Install
 
 ```bash
-go get -u github.com/Frank-Mayer/ohmygosh
+go get -u github.com/tsukinoko-kun/ohmygosh
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Frank-Mayer/ohmygosh"
+	"github.com/tsukinoko-kun/ohmygosh"
 )
 
 func main() {

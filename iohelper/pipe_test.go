@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Frank-Mayer/ohmygosh/iohelper"
+	"github.com/tsukinoko-kun/ohmygosh/iohelper"
 )
 
 func TestPipe(t *testing.T) {

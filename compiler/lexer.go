@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Frank-Mayer/ohmygosh/runtime"
+	"github.com/tsukinoko-kun/ohmygosh/runtime"
 )
 
 func (k LexicalTokenKind) String() string {

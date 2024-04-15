@@ -1,3 +1,3 @@
-module github.com/Frank-Mayer/ohmygosh
+module github.com/tsukinoko-kun/ohmygosh
 
 go 1.22.1

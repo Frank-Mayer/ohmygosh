@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Frank-Mayer/ohmygosh/iohelper"
+	"github.com/tsukinoko-kun/ohmygosh/iohelper"
 )
 
 func execute_cd(c *Command, _ *IoProvider) error {

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Frank-Mayer/ohmygosh/iohelper"
+	"github.com/tsukinoko-kun/ohmygosh/iohelper"
 )
 
 type IoProvider struct {
