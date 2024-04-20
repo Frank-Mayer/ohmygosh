@@ -58,7 +58,6 @@ func Parse(text string, tokens []LexicalToken, iop *runtime.IoProvider) ([]*runt
 					} else {
 						*command.Stdout = &w
 						i++
-						done()
 					}
 				} else {
 					return nil, newParserError(token.Index, text, "expected identifier after redirect")

@@ -225,6 +225,20 @@ func TestLexicalAnalysis(t *testing.T) {
 				{Kind: compiler.LexicalIdentifier, Content: ">test_value<", Index: 5},
 			},
 		},
+		{
+			"pnpm exec astro dev --port 8002 > /dev/null &",
+			[]compiler.LexicalToken{
+				{Kind: compiler.LexicalIdentifier, Content: "pnpm", Index: 0},
+				{Kind: compiler.LexicalIdentifier, Content: "exec", Index: 5},
+				{Kind: compiler.LexicalIdentifier, Content: "astro", Index: 10},
+				{Kind: compiler.LexicalIdentifier, Content: "dev", Index: 16},
+				{Kind: compiler.LexicalIdentifier, Content: "--port", Index: 20},
+				{Kind: compiler.LexicalIdentifier, Content: "8002", Index: 27},
+				{Kind: compiler.LexicalFileStdout, Index: 32},
+				{Kind: compiler.LexicalIdentifier, Content: "/dev/null", Index: 34},
+				{Kind: compiler.LexicalBackground, Index: 44},
+			},
+		},
 	}
 
 	for i, c := range cases {
