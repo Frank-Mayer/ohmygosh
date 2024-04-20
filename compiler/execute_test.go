@@ -54,7 +54,7 @@ xyz`,
 		t.Run(fmt.Sprintf("case %d %q", i, c.in), func(t *testing.T) {
 			iop, stdout, stderr := runtime.TestIoProvider(c.stdin)
 			defer iop.Close()
-			if err := compiler.Execute(c.in, iop); err != nil {
+			if wg, err := compiler.Execute(c.in, iop); func() bool { wg.Wait(); return err != nil }() {
 				t.Error(err)
 				return
 			}

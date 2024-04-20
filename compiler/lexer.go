@@ -195,7 +195,7 @@ func LexicalAnalysis(text string, iop *runtime.IoProvider) ([]LexicalToken, erro
 				}
 				iop, sb := runtime.SubshellIoProvider(iop)
 				defer iop.Close()
-				if err := Execute(subshell.String(), iop); err != nil {
+				if wg, err := Execute(subshell.String(), iop); func() bool { wg.Wait(); return err != nil }() {
 					return nil, newLexicalError(i, text, fmt.Sprintf("failed to execute subshell: %v", err))
 				}
 				tb.WriteString(strings.TrimSpace(sb.String()), i)

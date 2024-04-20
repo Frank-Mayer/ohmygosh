@@ -15,6 +15,6 @@ func main() {
 		}
 		print("$ ")
 		text, _ := reader.ReadString('\n')
-		_ = ohmygosh.Execute(text)
+		_, _ = ohmygosh.Execute(text)
 	}
 }

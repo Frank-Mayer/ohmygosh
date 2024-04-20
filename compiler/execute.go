@@ -8,18 +8,18 @@ import (
 	"github.com/tsukinoko-kun/ohmygosh/runtime"
 )
 
-func Execute(text string, iop *runtime.IoProvider) error {
+func Execute(text string, iop *runtime.IoProvider) (*sync.WaitGroup, error) {
 	tokens, err := LexicalAnalysis(text, iop)
 	if err != nil {
-		return errors.Join(errors.New("failed to lexically analyze input"), err)
+		return nil, errors.Join(errors.New("failed to lexically analyze input"), err)
 	}
 
 	commands, err := Parse(text, tokens, iop)
 	if err != nil {
-		return errors.Join(errors.New("failed to parse input"), err)
+		return nil, errors.Join(errors.New("failed to parse input"), err)
 	}
 
-	wg := sync.WaitGroup{}
+	wg := &sync.WaitGroup{}
 
 	for i, command := range commands {
 		if command.Background {
@@ -45,12 +45,10 @@ func Execute(text string, iop *runtime.IoProvider) error {
 			stderr := **command.Stderr
 			_ = stderr.Close()
 			if err != nil {
-				return errors.Join(fmt.Errorf("failed to execute command %d: %q", i, command.String()), err)
+				return nil, errors.Join(fmt.Errorf("failed to execute command %d: %q", i, command.String()), err)
 			}
 		}
 	}
 
-	wg.Wait()
-
-	return nil
+	return wg, nil
 }
